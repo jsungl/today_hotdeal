@@ -5,6 +5,7 @@ const Home = () => {
         <div>
             <h1>홈</h1>
             <p>Home 페이지</p>
+            <p>{process.env.REACT_APP_MODE}</p>
             <ul>
                 <li>
                     <Link to='/about'>소개</Link>
