@@ -11,8 +11,8 @@ import NotFound from './pages/NotFound';
 function App() {
 
   useEffect(() => {
-    axios.get('http://localhost:5000/test')
-    .then(res => console.log(res.data));
+    axios.get(`${process.env.REACT_APP_URL}/test`)
+    .then(res => alert(res.data));
   })
   return (
     <Routes>
