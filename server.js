@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const app = express();
+const db = require('./dbconfig/db');
 
 if (process.env.NODE_ENV === 'production') {
     require("dotenv").config({ path: path.join(__dirname, '.env.production') });
@@ -24,6 +25,16 @@ app.get('/', function(req,res) {
 
 app.get('/test',function(req,res) {
     res.send('전송 성공!')
+});
+
+app.get('/api',(req,res) => {
+    db.query('select * from testTable',(err,data) => {
+        if (err) {
+            res.send(err);
+        } else{
+            res.send(data);
+        }
+    })
 });
 
 app.get('*', function(req,res) {
