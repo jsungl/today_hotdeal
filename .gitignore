@@ -144,7 +144,8 @@ dist
 .env.development
 .env.production
 
-# database
+# uploads folder
+uploads/
 
 
 # End of https://www.toptal.com/developers/gitignore/api/node
