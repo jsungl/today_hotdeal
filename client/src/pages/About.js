@@ -8,12 +8,12 @@ const About = () => {
     const imageUpload = async(event) => {
         event.preventDefault();
         console.log(event.target);
-        await axios.post(`${process.env.REACT_APP_URL}/upload`, event.target,{
+        await axios.post(`${process.env.REACT_APP_URL}/test`, event.target,{
             headers: {
               'Content-Type': 'multipart/form-data'
             }
         })
-        .then(res => alert(res.data))
+        .then(res => console.log(res))
         .catch(err => console.log(err));
     }
 

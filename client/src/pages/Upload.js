@@ -1,8 +1,14 @@
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import Editor from 'ckeditor5-custom-build/build/ckeditor';
 import Container from '@mui/material/Container';
+import { useState } from 'react';
+import axios from 'axios';
 
 export default function Upload() {
+    const [post, setPost] = useState({
+        title:'',
+        content:''
+    });
     const config = {
         placeholder: '내용을 입력하세요.',
         language: "ko",
@@ -51,22 +57,43 @@ export default function Upload() {
         image: {
             resizeUnit: "px",
             toolbar: [
-              "imageStyle:inline",
-              "imageStyle:block",
-              "imageStyle:side",
+              "imageStyle:alignLeft",
+              "imageStyle:alignCenter",
+              "imageStyle:alignRight",
               "|",
               "imageTextAlternative",
             ],
-            styles: ['inline', 'block', 'side'],
-            type: ["JPEG", "JPG", "GIF", "PNG"],
+            styles: ['alignLeft', 'alignRight','alignCenter'],
+            types: ["jpeg", "jpg", "gif"],
         },
+        simpleUpload: {
+            uploadUrl: `${process.env.REACT_APP_URL}/uploadimg`
+
+        }
     };
+
+    const getTitle = e => {
+        const { name, value } = e.target;
+        setPost({
+            ...post,
+            [name]: value
+        })
+        console.log(post);
+    }
+
+    const uploadForm = async() => {
+        await axios.post(`${process.env.REACT_APP_URL}/uploadPost`,post)
+        .then(res => alert(res.data.message))
+        .catch(err => console.log(err));
+
+    }
 
     return (
         <Container>
             <div>
                 <h1>업로드</h1>
                 <p>Upload 페이지</p>
+                <input type="text" placeholder='title' name='title' onChange={getTitle}></input>
                 <CKEditor
                         editor={Editor}
                         config={config}
@@ -83,7 +110,8 @@ export default function Upload() {
                         }}
                         onChange={(event, editor) => {
                             const data = editor.getData();
-                            console.log('change', data);
+                            setPost({...post,content:data});
+                            console.log('change', post);
                         }}
                         onBlur={(event, editor) => {
                             //에디터가 아닌 다른곳을 클릭했을 때
@@ -94,6 +122,7 @@ export default function Upload() {
                             console.log('Focus');
                         }}
                 />
+                <button onClick={uploadForm}>업로드</button>
             </div>
         </Container>
     );
