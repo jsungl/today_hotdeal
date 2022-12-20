@@ -5,7 +5,8 @@ import Article from './pages/Article';
 import Articles from './pages/Articles';
 import Layout from './pages/Layout';
 import NotFound from './pages/NotFound';
-import Upload from './pages/Upload';
+import Write from './pages/Write';
+//import Upload from './pages/Upload';
 
 function App() {
 
@@ -14,7 +15,7 @@ function App() {
       <Route path='/' element={<Layout/>}>
         <Route index element={<Home/>} />  
         <Route path='/about' element={<About/>} />
-        <Route path='/upload' element={<Upload/>} />
+        <Route path='/write' element={<Write/>} />
         <Route path='/articles' element={<Articles/>} />
         <Route path='/article/:id' element={<Article/>} />  
       </Route>
