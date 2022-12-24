@@ -2,7 +2,7 @@ import Upload from './Upload';
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import store from '../store';
-import axios from 'axios';
+//import axios from 'axios';
 
 export default function Write() {
 
@@ -39,11 +39,11 @@ export default function Write() {
             window.removeEventListener('unload',deleteFolder);
 
             //console.log('임시폴더 삭제');
-            await axios.delete(`${process.env.REACT_APP_URL}/uploadimg/${userId}`)
-                .then(res => console.log(res))
-                .catch(err => console.log(err));
+            // await axios.delete(`${process.env.REACT_APP_URL}/uploadimg/${userId}`)
+            //     .then(res => console.log(res))
+            //     .catch(err => console.log(err));
         }
-    },[dispatch,userId]);
+    },[dispatch]);
 
     return (
             <Upload userId={userId}/>

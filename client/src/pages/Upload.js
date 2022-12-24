@@ -1,6 +1,7 @@
 import { CKEditor } from '@ckeditor/ckeditor5-react';
-import Editor from 'ckeditor5-custom-build/build/ckeditor';
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import Container from '@mui/material/Container';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useDispatch, useSelector } from 'react-redux';
@@ -11,6 +12,7 @@ export default function Upload({userId}) {
     //     title:'',
     //     content:''
     // });
+    const [check, setCheck] = useState(false);
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const post = useSelector(state => ({
@@ -19,79 +21,47 @@ export default function Upload({userId}) {
         userId: state.userId,
         flag: state.flag
     }));
+    const imgLink = "http://localhost:5000/uploads";
 
     console.log('Upload 컴포넌트 post :: ',post);
 
-    const config = {
-        placeholder: '내용을 입력하세요.',
-        language: "ko",
-        toolbar:[
-            'undo',
-			'redo',
-			'heading',
-			'|',
-			'bold',
-			'italic',
-			'underline',
-			'fontFamily',
-			'fontColor',
-			'fontSize',
-			'bulletedList',
-			'numberedList',
-			'blockQuote',
-			'|',
-			'alignment',
-			'outdent',
-			'indent',
-			'|',
-			'imageInsert',
-			'link'
-            
-        ],
-        fontSize: {
-            options: [
-              14,
-              16,
-              18,
-              20,
-              22,
-              24,
-              25,
-              26,
-              27,
-              28,
-              29,
-              30,
-            ],
-        },
-        alignment: {
-            options: ["left", "center", "right"],
-        },
-        image: {
-            resizeUnit: "px",
-            toolbar: [
-              "imageStyle:alignLeft",
-              "imageStyle:alignCenter",
-              "imageStyle:alignRight",
-              "|",
-              "imageTextAlternative",
-            ],
-            styles: ['alignLeft', 'alignRight','alignCenter'],
-            types: ["jpeg", "jpg", "gif"],
-        },
-        simpleUpload: {
-            uploadUrl: `${process.env.REACT_APP_URL}/uploadimg/${userId}`
+    const customUploadAdapter = (loader) => {
+        return {
+            upload(){
+                return new Promise ((resolve, reject) => {
+                    const data = new FormData();
+                    loader.file.then( (file) => {
+                        data.append("name", file.name);
+                        data.append("file", file);
+                        console.log('data :: ',data);
 
+                        axios.post(`${process.env.REACT_APP_URL}/uploadimg`, data)
+                            .then((res) => {
+                                console.log('res :: ',res);
+                                if(!check){
+                                    setCheck(true);
+                                    console.log('res.data.filename :: ',res.data.filename);
+                                }
+                                resolve({
+                                    default: `${imgLink}/${res.data.filename}`
+                                });
+                            })
+                            .catch((err)=>reject(err));
+                    })
+                })
+            }
         }
-    };
+    }
+
+    function uploadPlugin (editor){ 
+        editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
+            return customUploadAdapter(loader);
+        }
+    }
 
     const getTitle = e => {
         const { value } = e.target;
         dispatch({type:'TITLE_CHANGE',title:value});
-        // setPost({
-        //     ...post,
-        //     [name]: value
-        // })
     }
 
     const uploadForm = async() => {
@@ -115,8 +85,12 @@ export default function Upload({userId}) {
                 <p>Upload 페이지</p>
                 <input type="text" placeholder='title' name='title' onChange={getTitle}></input>
                 <CKEditor
-                        editor={Editor}
-                        config={config}
+                        editor={ClassicEditor}
+                        config={{
+                            placeholder: '내용을 입력하세요.',
+                            language: "ko",
+                            extraPlugins: [uploadPlugin]
+                        }}
                         onReady={(editor) => {
                             // You can store the "editor" and use when it is needed.
                             editor.editing.view.change((writer) => {
@@ -130,16 +104,11 @@ export default function Upload({userId}) {
                         }}
                         onChange={(event, editor) => {
                             const data = editor.getData();
-                            const imgSrcReg = /(<img[^>]*src\s*=\s*[^>]*>)/g;
-                            // while(imgSrcReg.test(data)) {
-                            //     console.log('img 태그 :: ',RegExp.$1);
+                            // const imgSrcReg = /(<img[^>]*src\s*=\s*[^>]*>)/g;
+                            // if(imgSrcReg.test(data)){
+                            //     dispatch({type:'IMAGE_INSERT',flag:true});
                             // }
-                            if(imgSrcReg.test(data)){
-                                dispatch({type:'IMAGE_INSERT',flag:true});
-                            }
                             dispatch({type:'CONTENT_CHANGE',content:data});
-                            //setPost({...post,content:data});
-                            //console.log('change', post);
                         }}
                         onBlur={(event, editor) => {
                             //에디터가 아닌 다른곳을 클릭했을 때

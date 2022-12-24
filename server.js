@@ -96,11 +96,7 @@ try {
 const uploadImg = multer({
     storage: multer.diskStorage({ // 저장한공간 정보 : 하드디스크에 저장
         destination(req, file, done) { // 저장 위치
-            const path = `./uploads/temp/${req.params.userId}`;
-            !fs.existsSync(path) && fs.mkdirSync(path, {recursive:true},(err) => { 
-                if(err) cb(err);
-            });
-            done(null, `uploads/temp/${req.params.userId}`); // uploads라는 폴더 안에 저장
+            done(null, 'uploads/'); // uploads라는 폴더 안에 저장
         },
         filename(req, file, done) { // 파일명을 어떤 이름으로 올릴지
             const ext = path.extname(file.originalname); // 파일의 확장자
@@ -110,26 +106,9 @@ const uploadImg = multer({
     limits: { fileSize: 5 * 1024 * 1024 } // 5메가로 용량 제한
 });
 
-const multerUploader = uploadImg.single('upload');
 
-app.post('/uploadimg/:userId',(req,res) => {
-    multerUploader(req, res, function (err) {
-        console.log(req.file);
-        if(err instanceof multer.MulterError) {
-            // A Multer error occurred when uploading.
-            console.log('/uploadimg MulterError :: ',err);
-            res.status(500).json({uploaded: false, error: {message:'File too large(max 5MB)'}});
-            
-        } else if(err) {
-            // An unknown error occurred when uploading.
-            console.log('/uploadimg unknownError :: ',err);
-            res.status(500).json({uploaded: false, error: {message:'upload fail!'}});
-    
-        } else {
-            res.status(200).json({uploaded: true, url:`http://localhost:${port}/${req.file.destination}/${req.file.filename}`});
-        }
-    })
-    
+app.post('/uploadimg',uploadImg.single('file'),(req,res) => {
+    res.status(200).json(req.file);
 });
 
 app.use("/uploads", express.static(path.join(__dirname, "/uploads")));
@@ -145,39 +124,7 @@ app.post('/uploadPost',(req,res) => {
             console.log('/uploadPost error :: ',err);
             res.status(500).json({uploaded: false, error: {message:'upload fail!'}});
         } else{
-            const postId = data.insertId;
-            console.log('postId :: ',postId);
-            const oldPath = `./uploads/temp/${userId}`;
-            const newPath = `./uploads/permanent/${postId}`;
-
-            !fs.existsSync(newPath) && fs.mkdirSync(newPath,{recursive:true},(err) => { 
-                if(err) cb(err);
-            });
-
-            const imgSrcReg = /(<img[^>]*src\s*=\s*[\"']?([^>\"']+)[\"']?[^>]*>)/g;
-            while(imgSrcReg.test(content)) {
-                let src = RegExp.$2.trim();
-                let imgName = src.substr(src.indexOf(userId) + userId.length + 1);
-                console.log('imgName :: ',imgName);
-                let tmpImgPath = oldPath + `/${imgName}`;
-                let permanentImgPath = newPath + `/${imgName}`;
-                
-                fs.existsSync(tmpImgPath) && fs.rename(tmpImgPath,permanentImgPath,(err) => {
-                    if(err) console.log(err);
-                });
-            }
-            const newContent = content.replaceAll(`temp/${userId}`,`permanent/${postId}`);
-            console.log('newContent :: ',newContent);
-            db.query('update Board set content=? where id=?',[newContent,postId],(err,data) => {
-                if(err) {
-                    console.log('update시 error :: ',err);
-                    res.status(500).json({updated:false, error:{message:'update fail!'}});
-                } else {
-                    console.log('update 성공!');
-                    res.status(200).json({uploaded: true, message:'upload success!'});
-                }
-            })
-
+            res.status(200).json({uploaded: true, message:'upload success!'});
         }
     });
 
