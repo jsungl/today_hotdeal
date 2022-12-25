@@ -1,5 +1,6 @@
 import { CKEditor } from '@ckeditor/ckeditor5-react';
-import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+//import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+import CustomEditor from 'ckeditor5-custom-build/build/ckeditor';
 import Container from '@mui/material/Container';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -85,10 +86,27 @@ export default function Upload({userId}) {
                 <p>Upload 페이지</p>
                 <input type="text" placeholder='title' name='title' onChange={getTitle}></input>
                 <CKEditor
-                        editor={ClassicEditor}
+                        editor={CustomEditor}
                         config={{
                             placeholder: '내용을 입력하세요.',
                             language: "ko",
+                            toolbar: [
+                                'undo','redo','|',
+                                'heading','|',
+                                'bold','italic','underline','strikethrough','|',
+                                'fontFamily','fontSize','fontColor','|',
+                                'alignment','blockQuote','|',
+                                'imageUpload'],
+                            image: {
+                                toolbar: [
+                                    "imageStyle:alignBlockLeft",
+                                    "imageStyle:alignCenter",
+                                    "imageStyle:alignBlockRight",
+                                    "|",
+                                    "imageTextAlternative",
+                                ],
+                                styles:["alignBlockLeft","alignBlockRight","alignCenter"]
+                            },
                             extraPlugins: [uploadPlugin]
                         }}
                         onReady={(editor) => {
