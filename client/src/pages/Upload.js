@@ -2,7 +2,6 @@ import { CKEditor } from '@ckeditor/ckeditor5-react';
 //import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import CustomEditor from 'ckeditor5-custom-build/build/ckeditor';
 import Container from '@mui/material/Container';
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useDispatch, useSelector } from 'react-redux';
@@ -13,7 +12,6 @@ export default function Upload({userId}) {
     //     title:'',
     //     content:''
     // });
-    const [check, setCheck] = useState(false);
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const post = useSelector(state => ({
@@ -39,10 +37,7 @@ export default function Upload({userId}) {
                         axios.post(`${process.env.REACT_APP_URL}/uploadimg`, data)
                             .then((res) => {
                                 console.log('res :: ',res);
-                                if(!check){
-                                    setCheck(true);
-                                    console.log('res.data.filename :: ',res.data.filename);
-                                }
+                                console.log('res.data.filename :: ',res.data.filename);
                                 resolve({
                                     default: `${imgLink}/${res.data.filename}`
                                 });
@@ -50,6 +45,10 @@ export default function Upload({userId}) {
                             .catch((err)=>reject(err));
                     })
                 })
+            },
+            abort() {
+                // Reject the promise returned from the upload() method.
+                console.log('abort method called');
             }
         }
     }

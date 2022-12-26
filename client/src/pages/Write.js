@@ -1,7 +1,7 @@
 import Upload from './Upload';
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import store from '../store';
+import store from '../modules/store';
 //import axios from 'axios';
 
 export default function Write() {

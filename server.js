@@ -142,7 +142,7 @@ const upload = multer({
     storage: multerS3({
        // 저장 위치
        s3: new AWS.S3(),
-       bucket: 'js-test-bucket-01',
+       bucket: process.env.S3_BUCKET_NAME,
        acl: "public-read",
        contentType: multerS3.AUTO_CONTENT_TYPE,
        key(req, file, cb) {
