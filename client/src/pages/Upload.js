@@ -5,6 +5,8 @@ import Container from '@mui/material/Container';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useDispatch, useSelector } from 'react-redux';
+// import dotenv from "dotenv";
+// dotenv.config();
 
 export default function Upload({userId}) {
 
@@ -20,7 +22,7 @@ export default function Upload({userId}) {
         userId: state.userId,
         flag: state.flag
     }));
-    const imgLink = "http://localhost:5000/uploads";
+    //const imgLink = "http://localhost:5000/uploads";
 
     console.log('Upload 컴포넌트 post :: ',post);
 
@@ -28,21 +30,41 @@ export default function Upload({userId}) {
         return {
             upload(){
                 return new Promise ((resolve, reject) => {
-                    const data = new FormData();
-                    loader.file.then( (file) => {
-                        data.append("name", file.name);
-                        data.append("file", file);
-                        console.log('data :: ',data);
+                    
+                    loader.file.then( async(file) => {
+                        console.log('file :: ',file);
+                        const name = file.name;
+                        const filename = name.substring(0,name.indexOf('.'))+Date.now();
+                        const type = name.substring(name.indexOf('.')+1);
+                        //const type = file.type.split("/")[1];                        
 
-                        axios.post(`${process.env.REACT_APP_URL}/uploadimg`, data)
-                            .then((res) => {
-                                console.log('res :: ',res);
-                                console.log('res.data.filename :: ',res.data.filename);
-                                resolve({
-                                    default: `${imgLink}/${res.data.filename}`
-                                });
-                            })
-                            .catch((err)=>reject(err));
+                        const bodyData = {
+                            "objectKey": `temp/${userId}/${filename}.${type}`,
+                            "s3Action": "putObject",
+                            "contentType": file.type
+                        }
+
+                        const signedURL = await axios.post(
+                            process.env.REACT_APP_GET_PRESIGNEDURL,
+                            bodyData
+                        )
+                        .then(body => {
+                            return body.data
+                        })
+                        .catch(error=>console.error(error));
+
+                        await fetch(signedURL, {
+                            method: "PUT",
+                            body: file,
+                            headers: {
+                                "Content-Type": file.type,
+                                "Access-Control-Allow-Origin":"*",
+                                "Access-Control-Allow-Credentials":"true",
+                            }
+                        });
+                        resolve({
+                            default: `${process.env.REACT_APP_IMAGE_URL}/temp/${userId}/${filename}.${type}`
+                        });    
                     })
                 })
             },
@@ -66,9 +88,25 @@ export default function Upload({userId}) {
 
     const uploadForm = async() => {
         try {
+            //e.preventDefault();
             const result = await axios.post(`${process.env.REACT_APP_URL}/uploadPost`,post);
-            alert(result.data.message);
-            navigate('/articles',{replace:true});
+            const uploaded = result.data.uploaded;
+            const postId = result.data.postId;
+            if(!uploaded) {
+                alert('upload error!');
+            } else {
+                const moveResult = await axios.put(process.env.REACT_APP_MOVE_S3_OBJECTS,{userId,postId});
+                if(moveResult.status === 200){
+                    const updateResult = await axios.post(`${process.env.REACT_APP_URL}/updateImagePath`,{
+                        userId,
+                        postId
+                    });
+                    console.log(updateResult.data.message);
+                    alert('upload success!');
+                    navigate('/articles',{replace:true});
+                }
+            }
+
         }catch(err) {
             console.log(err);
         }
@@ -121,11 +159,12 @@ export default function Upload({userId}) {
                         }}
                         onChange={(event, editor) => {
                             const data = editor.getData();
-                            // const imgSrcReg = /(<img[^>]*src\s*=\s*[^>]*>)/g;
-                            // if(imgSrcReg.test(data)){
-                            //     dispatch({type:'IMAGE_INSERT',flag:true});
-                            // }
-                            dispatch({type:'CONTENT_CHANGE',content:data});
+                            const imgSrcReg = /(<img[^>]*src\s*=\s*[^>]*>)/g;
+                            if(imgSrcReg.test(data)){
+                                dispatch({type:'IMAGE_INSERT',flag:true});
+                            }
+                            const newContent = data.replaceAll('img','img style="width:100%"');
+                            dispatch({type:'CONTENT_CHANGE',content:newContent});
                         }}
                         onBlur={(event, editor) => {
                             //에디터가 아닌 다른곳을 클릭했을 때

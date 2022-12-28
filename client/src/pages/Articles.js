@@ -8,7 +8,7 @@ const Articles = () => {
     useEffect(() => {
         async function getList() {
             try{
-                const result = await axios.get(`${process.env.REACT_APP_URL}/postList`);
+                const result = await axios.get(`${process.env.REACT_APP_URL}/getPostList`);
                 const data = result.data.map(data=>data);
                 setList(data);
             } catch(e) {

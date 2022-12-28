@@ -12,7 +12,7 @@ const Article = () => {
     useEffect(() => {
         async function func() {
             try{
-                const result = await axios.get(`${process.env.REACT_APP_URL}/post?id=${id}`);
+                const result = await axios.get(`${process.env.REACT_APP_URL}/getPost?id=${id}`);
                 setTitle(result.data[0].title);
                 setContent(result.data[0].content);
             } catch(e) {
@@ -27,7 +27,6 @@ const Article = () => {
             <h2>게시글 번호 : {id}</h2>
             <h2>제목 : {title}</h2>
             <div dangerouslySetInnerHTML={{__html:DOMPurify.sanitize(content)}}>
-                {/* <img className="Image" alt="image01" src="https://js-test-bucket-01.s3.ap-northeast-2.amazonaws.com/test1/placeimg_640_480_grayscale_animals.jpg" /> */}
             </div>
         </div>
     );
