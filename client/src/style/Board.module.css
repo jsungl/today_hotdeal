@@ -1,0 +1,23 @@
+
+/* BotArea */
+.writerDiv {
+    display: inline-block;
+    padding: 10px;
+}
+.hitsDiv {
+    padding: 10px;
+    float: right;
+}
+.span {
+    color:#888;
+    padding: 0 6px;
+    font-size: 13px;
+}
+.b {
+    padding-left: 2px;
+}
+
+/* article */
+.articleDiv {
+    padding: 10px;
+}

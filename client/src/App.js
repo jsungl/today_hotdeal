@@ -1,12 +1,14 @@
 import { Routes, Route } from 'react-router-dom';
-import Home from './pages/Home';
-import About from './pages/About';
-import Article from './pages/Article';
-import Articles from './pages/Articles';
-import Layout from './pages/Layout';
-import NotFound from './pages/NotFound';
-import Write from './pages/Write';
-//import Upload from './pages/Upload';
+import Home from './components/pages/Home';
+import Layout from './components/Layout';
+import NotFound from './components/pages/NotFound';
+import BoardList from './components/pages/BoardList';
+import Board from './components/pages/Board';
+import BoardWrite from './components/pages/BoardWrite';
+import Login from './components/pages/Login';
+import SignUp from './components/pages/SignUp';
+import FindAccount from './components/pages/FindAccount';
+import BoardUpdate from './components/pages/BoardUpdate';
 
 function App() {
 
@@ -14,12 +16,15 @@ function App() {
     <Routes>
       <Route path='/' element={<Layout/>}>
         <Route index element={<Home/>} />  
-        <Route path='/about' element={<About/>} />
-        <Route path='/write' element={<Write/>} />
-        <Route path='/articles' element={<Articles/>} />
-        <Route path='/article/:id' element={<Article/>} />  
+        <Route path='list' element={<BoardList />}/>
+        <Route path='board/:postId' element={<Board />} />
+        <Route path='boardWrite' element={<BoardWrite />} />
+        <Route path='boardUpdate/:postId' element={<BoardUpdate />} />
       </Route>
-      <Route path='*' element={<NotFound/>} />
+      <Route path='/login' element={<Login />} />
+      <Route path='/signUp' element={<SignUp />} />
+      <Route path='/findAccount' element={<FindAccount />} />
+      <Route path='*' element={<NotFound />}/>
     </Routes>
   );
 }

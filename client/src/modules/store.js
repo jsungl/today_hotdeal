@@ -1,28 +1,32 @@
 import {createStore} from 'redux';
 
 
-function reducer(state, action){
-    if(state === undefined){
-        return {
-            title: '',
-            content: '',
-            userId:'suver21',
-            flag: false
-        }
+const initialState = {
+    content: '',
+    userId: 'suver21',
+    flag: false
+};
+
+function reducer(state = initialState, action){
+    switch (action.type) {
+        case "USER_CHANGE":
+            return {
+                ...state,
+                userId: action.userId
+            };
+        case "CONTENT_CHANGE":
+            return {
+                ...state,
+                content: action.content
+            };
+        case "IMAGE_UPLOAD":
+            return {
+                ...state,
+                flag: action.flag
+            };  
+        default:
+            return state;
     }
-    const newState = {...state};
-    if(action.type === 'TITLE_CHANGE'){
-        newState.title = action.title;
-    } else if(action.type === 'CONTENT_CHANGE') {
-        newState.content = action.content;
-    } else if(action.type === 'IMAGE_INSERT') {
-        newState.flag = action.flag;
-    } else {
-        newState.title = '';
-        newState.content = '';
-        newState.flag = false;
-    }
-    return newState;
 }
 
 const store = createStore(reducer);
