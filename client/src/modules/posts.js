@@ -2,14 +2,16 @@
 /**
  * 액션 타입
  */
-const SET_CONTENT = "posts/SET_CONTENT";
-const SET_FLAG = "posts/SET_FLAG";
+const SET_POST_CONTENT = "posts/SET_CONTENT";
+const SET_POST_FLAG = "posts/SET_FLAG";
+const SET_POST_INIT = "posts/SET_INIT";
  
  /**
   * 액션 생성함수
   */
-export const setContent = (content) => ({ type: SET_CONTENT, content });
-export const setFlag = (flag) => ({ type: SET_FLAG, flag });
+export const setPostContent = (content) => ({ type: SET_POST_CONTENT, content });
+export const setPostFlag = (flag) => ({ type: SET_POST_FLAG, flag });
+export const setPostInit = () => ({ type: SET_POST_INIT });
  
  /* 초기 상태 선언 */
 const initialState = {
@@ -23,16 +25,22 @@ const initialState = {
   */
 export default function postReducer(state = initialState, action) {
     switch (action.type) {
-        case SET_CONTENT:
+        case SET_POST_CONTENT:
             return {
                 ...state,
                 content: action.content
             };
-        case SET_FLAG:
+        case SET_POST_FLAG:
             return {
                 ...state,
                 flag: action.flag
             };
+        case SET_POST_INIT:
+            return {
+                ...state,
+                content: "",
+                flag: false
+            };    
         default:
             return state;
     }

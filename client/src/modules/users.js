@@ -1,26 +1,28 @@
-const SET_USER = "users/SET_USER";
 const SET_LOGIN = "users/SET_LOGIN";
+const SET_LOGOUT = "users/SET_LOGOUT";
 
-export const setUser = (userId) => ({ type: SET_USER, userId });
-export const setLogin = (login) => ({ type: SET_LOGIN, login });
+export const setLogin = (userId) => ({ type: SET_LOGIN, userId });
+export const setLogout = (userId) => ({ type: SET_LOGOUT, userId });
 
 const initialState = {
   login: false,
-  userId: ""
+  userId: "suver21"
 };
 
 export default function userReducer(state = initialState, action) {
   switch (action.type) {
-    case SET_USER:
-      return {
-        ...state,
-        userId: action.userId
-      };
     case SET_LOGIN:
       return {
         ...state,
-        login: action.login
+        login: true,
+        userId: action.userId
       };
+    case SET_LOGOUT:
+      return {
+        ...state,
+        login: false,
+        userId: ""
+      }
     default:
       return state;
   }

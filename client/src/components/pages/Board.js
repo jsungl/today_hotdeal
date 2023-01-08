@@ -15,6 +15,8 @@ import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import IconButton from '@mui/material/IconButton';
 import styles from '../../style/Board.module.css';
 
+axios.defaults.withCredentials = true;
+
 const TopArea = styled.div`
     padding: 10px;
     border-top: 1px solid #ccc; 
@@ -55,6 +57,7 @@ export default function Board() {
                     }
                 })
                 .then((res) => {
+                    console.log(res);
                     setTitle(res.data[0].title);
                     setContent(res.data[0].html_content);
                     setUser(res.data[0].user_id);
@@ -86,16 +89,15 @@ export default function Board() {
         <>  
             <Box>
                 <TopArea>
-                    <Stack  direction="row" justifyContent="space-between" alignItems="center">
+                    <Stack  direction="row" justifyContent="space-between" alignItems="center" spacing={4}>
                         <Typography
                             variant="h5"
                             color="inherit"
                             align="left"
-                            noWrap
                         >
                             {title}
                         </Typography>
-                        <span>{date}</span>
+                        <span style={{whiteSpace:"nowrap"}}>{date}</span>
                     </Stack>
                 </TopArea>
                 <BotArea>

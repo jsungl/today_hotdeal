@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -11,6 +11,10 @@ import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import Stack from '@mui/material/Stack';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import CircularProgress from "@mui/material/CircularProgress";
+import store from '../../modules/index';
+import { setAsync, setAsyncSuccess, setAsyncError, setAsyncInit } from '../../modules/asyncReqState';
+import { setPostInit } from '../../modules/posts';
 
 
 const theme = createTheme({
@@ -26,9 +30,9 @@ export default function BoardUpdate() {
     const params = useParams();
     const postId = params.postId; //string
     const navigate = useNavigate();
-    //const dispatch = useDispatch();
+    const dispatch = useDispatch();
     const [category, setCategory] = useState(0);
-    const [content, setContent] = useState('');
+    const [originData, setOriginData] = useState(''); //문자열로 저장된 이미지 이름 배열
     const [user, setUser] = useState('');
     const [url, setUrl] = useState('');
     const [mall, setMall] = useState('');
@@ -36,15 +40,15 @@ export default function BoardUpdate() {
     const [price, setPrice] = useState(0);
     const [charge, setCharge] = useState(0);
 
-    const post = useSelector(state => ({
-        content: state.content,
-        userId: state.userId,
-        flag: state.flag
-    }));
+    const content = useSelector(state => state.postReducer.content);
+    const userId = useSelector(state => state.userReducer.userId);
+    //const flag = useSelector(state => state.postReducer.flag);
+    const loading = useSelector(state => state.asyncReqReducer.loading);
+    const success = useSelector(state => state.asyncReqReducer.success);
 
-    const userName = post.userId;
-    const imageUpload = {flag: post.flag}; //이미지 업로드했는지 확인 -> 임시폴더
-    const imgNamesArr = {originList:[], deletedList:[], uploadList:[]}; //기존에 저장되어 있는 이미지 배열,수정시 삭제한 이미지 배열
+    //const userName = post.userId;
+    const imageUpload = {flag: false}; //본문에 이미지가 있는지 확인
+    const imgNamesArr = {originList:[], deletedList:[], uploadList:[]}; //기존에 저장되어 있는 이미지 배열,수정시 삭제한 이미지 배열,새로 업로드한 이미지 배열
     const [originImg,setOriginImg] = useState(''); //문자열로 변환한 기존에 저장되어 있는 이미지 배열, 저장되어 있지 않으면 NULL
 
     const style = {
@@ -72,20 +76,25 @@ export default function BoardUpdate() {
         window.addEventListener('beforeunload',preventClose);
         window.addEventListener('unload',deleteFolder);
 
-        return () => {
+        return async() => {
             console.log('[BoardUpdate Component] 컴포넌트 언마운트');
             window.removeEventListener('beforeunload',preventClose);
             window.removeEventListener('unload',deleteFolder);
-            // console.log('[BoardUpdate Component] 언마운트 flag ::',post.flag);
-            // console.log('[BoardUpdate Component] 언마운트 userId ::',post.userId);
-            // try {
-            //     const res = await axios.delete(process.env.REACT_APP_DELETE_S3_TEMP_OBJECTS,{data:{userId:userName}});
-            //     console.log('S3 임시폴더 삭제 :: ',res.data.deleted);
-            // } catch(err){
-            //     console.error(err);
-            // }
+            console.log('[BoardUpdate Component] 언마운트 flag ::',store.getState().postReducer.flag);
+            console.log('[BoardUpdate Component] 언마운트 userId ::',user);
+            if(store.getState().postReducer.flag){
+                try {
+                    const res = await axios.delete(process.env.REACT_APP_DELETE_S3_TEMP_OBJECTS,{data:{userId:user}});
+                    console.log('S3 임시폴더 삭제 :: ',res.data.deleted);
+                    dispatch(setPostInit());
+                } catch(err){
+                    console.error(err);
+                }
+            }else{
+                dispatch(setPostInit());
+            }
         }
-    },[preventClose,deleteFolder]);
+    },[user,dispatch,preventClose,deleteFolder]);
 
     useEffect(() => {
         async function getPost() {
@@ -96,7 +105,7 @@ export default function BoardUpdate() {
             })
             .then((res) => {
                 setCategory(res.data.boardInfo[0].category);
-                setContent(res.data.boardInfo[0].html_content);
+                setOriginData(res.data.boardInfo[0].html_content);
                 setUser(res.data.boardInfo[0].user_id);
                 setUrl(res.data.boardInfo[0].product_url);
                 setMall(res.data.boardInfo[0].product_mall);
@@ -112,6 +121,13 @@ export default function BoardUpdate() {
         }
         getPost();
     },[postId]);
+
+    useEffect(() => {
+        if (success) {
+            dispatch(setAsyncInit());
+            navigate('/list',{replace:true});
+        }
+    }, [success, navigate, dispatch]);
 
 
     //* content를 html과 text로 나누기
@@ -154,12 +170,14 @@ export default function BoardUpdate() {
                         });
                     } 
                     alert('Update Success!');
-                    navigate('/list',{replace:true});
+                    dispatch(setAsyncSuccess()); //요청 성공
+                    //navigate('/list',{replace:true});
                 }
             }
         }catch(err) {
-            console.log('[BoardUpdate Component] 영구폴더 이동 람다함수 실행 오류 ::',err);
+            console.log('[BoardUpdate Component] 게시글 수정 업로드 실패 ::',err);
             alert('Update Fail!');
+            dispatch(setAsyncError()); //요청 실패
         }
     }
     
@@ -177,10 +195,11 @@ export default function BoardUpdate() {
                     postId,
                     files
                 });
-                console.log('[BoardUpdate Component] S3,DB에서 이미지 삭제 요청 ::',result.data.updated);
+                console.log('[BoardUpdate Component] 이미지 삭제 요청 ::',result.data.updated);
             }
         }catch(err){
-            console.log('[BoardUpdate Component] 이미지 삭제 요청 오류 ::',err);
+            console.log('[BoardUpdate Component] 이미지 삭제 요청 실패 ::',err);
+            dispatch(setAsyncError()); //요청 실패
         }
     }
 
@@ -193,13 +212,14 @@ export default function BoardUpdate() {
             const updatePrice = data.get('productPrice');
             const updateCharge = data.get('deliveryCharge');
 
-            if(content !== post.content || name !== updateName || price !== updatePrice || charge !== updateCharge){ //수정사항이 있는경우
+            if(originData !== content || name !== updateName || price !== updatePrice || charge !== updateCharge){ //수정사항이 있는경우
                 console.log('[BoardUpdate Component] 게시글 수정!');
-                const textContent = devideContent(post.content);
+                
+                const textContent = devideContent(content);
                 const imgSrcReg = /(<img[^>]*src\s*=\s*[^>]*>)/g; //img 태그 src 속성 찾는 정규식
                 const figureStyleReg = /(<figure[^>]*style\s*=\s*[^>]*>)/gi; //figure 태그 style 속성 찾는 정규식
                 const figureReg = /(<figure[^>]*>)/gi; //figure 태그 찾는 정규식
-                let htmlContent = post.content;
+                let htmlContent = content;
 
                 console.log('[BoardUpdate Component] DB에 저장되어 있는 기존 이미지 ::',originImg);
                 if(originImg){ //기존에 저장되어있는 이미지가 있는 경우(null이 아닌경우)
@@ -212,7 +232,9 @@ export default function BoardUpdate() {
 
                 if(imgSrcReg.test(htmlContent)){ //본문에 이미지가 있는지 확인
                     if(htmlContent.includes('/temp/')) { //이미지 경로에서 temp가 있는지 찾는다 -> 복붙한 이미지인지 업로드한 이미지인지 확인
+                        console.log('[BoardUpdate Component] 이미지 경로에 temp가 있는 경우 flag ::',imageUpload.flag);
                         imageUpload.flag = true;
+                        dispatch(setAsync()); //요청시작
                     }
                     htmlContent = htmlContent.replaceAll('<img','<img style="max-width:100%!important"');
 
@@ -260,7 +282,7 @@ export default function BoardUpdate() {
                         return htmlContent; //map함수 반환을 변수에 정의하는것이 아니므로 의미없는 리턴값임
                     });
                     console.log('[BoardUpdate Component] 삭제한 이미지 파일 ::',copyImgNames); //삭제하지 않았으면 빈 배열
-                    imgNamesArr.deletedList = [...copyImgNames];
+                    if(copyImgNames.length !== 0) imgNamesArr.deletedList = [...copyImgNames];
 
                 }else {
                     // 글만 있는경우 or 이미지를 모두 삭제한 경우
@@ -285,7 +307,7 @@ export default function BoardUpdate() {
             
                 const result = await axios.put(`${process.env.REACT_APP_URL}/updatePost`,updateData); //업데이트 폼 전송
                 if(result.data.updated){
-                    console.log('[BoardUpdate Component] 이미지 업로드 확인 ::',imageUpload.flag);
+                    console.log('[BoardUpdate Component] 본문에 이미지 있는지 확인 ::',imageUpload.flag);
                     if(imageUpload.flag) {
                         //이미지 업로드한 경우 or 삭제와 업로드 둘다 한 경우
                         updatePost(user,postId); //사용자ID와 게시글 Number 
@@ -295,12 +317,14 @@ export default function BoardUpdate() {
                             deletePost(postId);
                         } 
                         alert('Update Success!');
-                        navigate('/list',{replace:true});
+                        dispatch(setAsyncSuccess()); //요청성공
+                        //navigate('/list',{replace:true});
                     }
 
                 }else { //업데이트 실패
                     console.log('[BoardUpdate Component] 업데이트 폼 전송 실패');
                     alert('Update Fail!');
+                    dispatch(setAsyncError());
                 }
 
             }else{ //수정사항이 없는경우
@@ -309,70 +333,84 @@ export default function BoardUpdate() {
             }
         }catch(err) {
             console.log(err);
+            dispatch(setAsyncError());
         }
     }
 
     return(
         <>
-            <Typography variant="h5" align='center' gutterBottom sx={{borderBottom:'1px solid #888'}}>
-                핫딜 수정
-            </Typography>
-            <Box component="form" onSubmit={handleSubmit}>
-                <Box sx={{marginTop:'30px',marginBottom:'50px'}}>
-                    <table>
-                        <tbody>
-                            <tr>
-                                <td style={style}>상품 분류</td>
-                                <td>
-                                    <TextField select name="postCategory" size="small" value={category} disabled>
-                                        <MenuItem value={0}>먹거리</MenuItem>
-                                        <MenuItem value={1}>PC제품</MenuItem>
-                                        <MenuItem value={2}>가전제품</MenuItem>
-                                        <MenuItem value={3}>생활용품</MenuItem>
-                                        <MenuItem value={4}>의류</MenuItem>
-                                    </TextField>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style={style}>URL 링크</td>
-                                <td><TextField name='postUrl' size="small" margin="dense" sx={{width:300}} type="url" value={url} disabled/></td>
-                            </tr>
-                            <tr>
-                                <td>쇼핑몰</td>
-                                <td><TextField name='productMall' size="small" margin="dense" value={mall} disabled/></td>
-                            </tr>
-                            <tr>
-                                <td>상품명</td>
-                                <td><TextField name='productName' size="small" margin="dense" value={name} required onChange={(e)=>{setName(e.target.value)}}/></td>
-                            </tr>
-                            <tr>
-                                <td>가격</td>
-                                <td><TextField name='productPrice' size="small" margin="dense" type="number" value={price} required onChange={(e)=>{setPrice(e.target.value)}}/></td>
-                            </tr>
-                            <tr>
-                                <td>배송비</td>
-                                <td><TextField name='deliveryCharge' size="small" margin="dense" type="number" value={charge} required onChange={(e)=>{setCharge(e.target.value)}}/></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </Box>
-                <UpdateEditor userId={userName} content={content}/>
-                <Stack
-                    direction="row"
-                    justifyContent="flex-end"
-                    alignItems="center"
-                    spacing={2}
-                    sx={{
-                        mt:3,
-                        mb:2
-                    }}
-                >
-                    <ThemeProvider theme={theme}>
-                        <Button type="submit" variant="contained" size="small">등록</Button>
-                        <Button variant="contained" size="small" onClick={()=>navigate(-1)}>취소</Button>
-                    </ThemeProvider>
-                </Stack>
+        {loading ? 
+            <Box sx={{ 
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "100vh"
+            }}>
+                <CircularProgress />
             </Box>
+            :
+            <>
+                <Typography variant="h5" align='center' gutterBottom sx={{borderBottom:'1px solid #888'}}>
+                    핫딜 수정
+                </Typography>
+                <Box component="form" onSubmit={handleSubmit}>
+                    <Box sx={{marginTop:'30px',marginBottom:'50px'}}>
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <td style={style}>상품 분류</td>
+                                    <td>
+                                        <TextField select name="postCategory" size="small" value={category} disabled>
+                                            <MenuItem value={0}>먹거리</MenuItem>
+                                            <MenuItem value={1}>PC제품</MenuItem>
+                                            <MenuItem value={2}>가전제품</MenuItem>
+                                            <MenuItem value={3}>생활용품</MenuItem>
+                                            <MenuItem value={4}>의류</MenuItem>
+                                        </TextField>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style={style}>URL 링크</td>
+                                    <td><TextField name='postUrl' size="small" margin="dense" sx={{width:300}} type="url" value={url} disabled/></td>
+                                </tr>
+                                <tr>
+                                    <td>쇼핑몰</td>
+                                    <td><TextField name='productMall' size="small" margin="dense" value={mall} disabled/></td>
+                                </tr>
+                                <tr>
+                                    <td>상품명</td>
+                                    <td><TextField name='productName' size="small" margin="dense" value={name} required onChange={(e)=>{setName(e.target.value)}}/></td>
+                                </tr>
+                                <tr>
+                                    <td>가격</td>
+                                    <td><TextField name='productPrice' size="small" margin="dense" type="number" value={price} required onChange={(e)=>{setPrice(e.target.value)}}/></td>
+                                </tr>
+                                <tr>
+                                    <td>배송비</td>
+                                    <td><TextField name='deliveryCharge' size="small" margin="dense" type="number" value={charge} required onChange={(e)=>{setCharge(e.target.value)}}/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </Box>
+                    <UpdateEditor userId={userId} content={originData}/>
+                    <Stack
+                        direction="row"
+                        justifyContent="flex-end"
+                        alignItems="center"
+                        spacing={2}
+                        sx={{
+                            mt:3,
+                            mb:2
+                        }}
+                    >
+                        <ThemeProvider theme={theme}>
+                            <Button type="submit" variant="contained" size="small">등록</Button>
+                            <Button variant="contained" size="small" onClick={()=>navigate(-1)}>취소</Button>
+                        </ThemeProvider>
+                    </Stack>
+                </Box>
+            </>
+        }
         </>
     );
 };

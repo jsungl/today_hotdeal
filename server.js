@@ -15,10 +15,15 @@ const port = process.env.PORT; //port 번호
 
 /* cors 오류 해결 */
 const cors = require('cors');
-app.use(cors());
+app.use(cors({
+    origin: true, // 출처 허용 옵션
+    credentials: true // 사용자 인증이 필요한 리소스(쿠키 ..등) 접근
+}));
+//app.use(cors());
 app.use(express.json()); // 클라이언트에서 application/json 데이터를 보냈을때 파싱해서 body 객체에 넣어줌
 app.use(express.urlencoded({ extended: true })); // 클라이언트에서 application/x-www-form-urlencoded 데이터를 보냈을때 파싱해서 body 객체에 넣어줌
 app.use(cookieParser({ sameSite: "Lax" }));
+
 
 //app.use(express.static(path.join(__dirname, 'client/build')));
 //app.use("/uploads", express.static(path.join(__dirname, "/uploads")));
@@ -103,16 +108,49 @@ app.get('/getBoardList',(req, res) => {
     })
 });
 
+// client ip를 가져오는 함수
+function getUserIP(req) {
+    const addr = req.headers['x-forwarded-for'] || req.connection.remoteAddress
+    return addr
+}
+
 //* 게시글 정보 조회(상세보기)
 app.get('/getBoardContent',(req, res) => {
     let postId = req.query.postId;
+    let myIp = getUserIP(req);
+    if(req.cookies[myIp] === undefined){
+        //res.cookie('postId',postId,{ sameSite: 'none', secure: true});
+        res.cookie(myIp,postId,{
+            // 유효시간 1일    
+            maxAge: 1000 * 60 * 60 * 24
+        });
+        db.query('UPDATE Board SET hits=hits+1 WHERE board_no=?',[postId],(err,data) => {
+            if(err){
+                res.send(err);
+            }
+        });
+    }else{
+        if(!req.cookies[myIp].includes(postId)){
+            let oldValue = req.cookies[myIp];
+            let newValue = oldValue + '_' + postId;
+            res.cookie(myIp,newValue,{
+                maxAge: 1000 * 60 * 60 * 24
+            });
+            db.query('UPDATE Board SET hits=hits+1 WHERE board_no=?',[postId],(err,data) => {
+                if(err){
+                    res.send(err);
+                }
+            });
+        }
+    }
+
     db.query('SELECT * FROM Board WHERE board_no = ?',[postId],(err, data) => {
       if(err) {
         res.send(err);
       } else {
         res.send(data);
       }
-    })
+    });
 });
 
 //* 게시글 등록
@@ -203,7 +241,7 @@ app.put('/updatePost',(req,res) => {
     );
 });
 
-//* 게시글 정보와 이미지 파일 조회
+//* 게시글 정보와 이미지 파일 조회(게시글 수정시)
 app.get('/getBoardInfo',(req, res) => {
     let postId = req.query.postId;
     db.query('SELECT * FROM Board WHERE board_no = ?',[postId],(err, data) => {
@@ -237,8 +275,8 @@ app.put('/updateImageNames',(req,res) => {
             console.log('/updateImageNames error :: ',err);
             res.send(err);
         }else {
-            console.log('/updateImageNames data ::',data);
             if(data[0] === undefined){ //DB에 저장된 이미지가 없는 게시글인 경우
+                console.log('/updateImageNames Image 테이블에 저장된 이미지가 없음');
                 db.query('INSERT INTO Image(board_no,title,file_name) SELECT ?,title,? FROM Board WHERE board_no=?',[postId,updatedImgNames,postId],(err,data) => {
                     if(err){
                         console.log('/updateImageNames error :: ',err);
@@ -248,6 +286,7 @@ app.put('/updateImageNames',(req,res) => {
                     }
                 });
             }else{
+                console.log('/updateImageNames Image 테이블에 저장된 이미지가 있음');
                 db.query('UPDATE Image SET file_name=? WHERE board_no=?',[updatedImgNames,postId],(err,data) => {
                     if(err){
                         console.log('/updateImageNames error :: ',err);

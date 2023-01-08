@@ -3,6 +3,7 @@ import { CKEditor } from '@ckeditor/ckeditor5-react';
 import CustomEditor from 'ckeditor5-custom-build/build/ckeditor';
 import axios from 'axios';
 import { useDispatch } from 'react-redux';
+import { setPostContent, setPostFlag } from '../modules/posts';
 // import dotenv from "dotenv";
 // dotenv.config();
 
@@ -13,7 +14,7 @@ export default function Editor({userId}) {
 
     //const imgLink = "http://localhost:5000/uploads";
 
-    //console.log('[Editor Component] content ::',content);
+    //console.log('[Editor Component] userId ::',userId);
 
     const customUploadAdapter = (loader) => {
         return {
@@ -26,7 +27,8 @@ export default function Editor({userId}) {
                         const filename = name.substring(0,name.indexOf('.'))+Date.now();
                         const type = name.substring(name.indexOf('.')+1);
                         //const type = file.type.split("/")[1];
-                        dispatch({type:"IMAGE_UPLOAD",flag:true});                        
+                        //dispatch({type:"IMAGE_UPLOAD",flag:true});
+                        dispatch(setPostFlag(true));                        
 
                         const bodyData = {
                             "objectKey": `temp/${userId}/${filename}.${type}`,
@@ -121,7 +123,8 @@ export default function Editor({userId}) {
             }}
             onChange={(event, editor) => {
                 const data = editor.getData();
-                dispatch({type:'CONTENT_CHANGE',content:data});
+                //dispatch({type:'CONTENT_CHANGE',content:data});
+                dispatch(setPostContent(data));
             }}
             onBlur={(event, editor) => {
                 //에디터가 아닌 다른곳을 클릭했을 때
