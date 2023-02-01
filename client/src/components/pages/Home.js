@@ -12,8 +12,8 @@ export default function Home() {
     console.log('=========Home Component Rendering=========');
     const [params] = useOutletContext();
     //const [params] = useSearchParams();
-    const queryTarget = params.get('search_target') === null ? 'title_content' : params.get('search_target');
-    const queryKeyword = params.get('search_keyword') === null ? '' : params.get('search_keyword');
+    // const queryTarget = params.get('search_target') === null ? 'title_content' : params.get('search_target');
+    // const queryKeyword = params.get('search_keyword') === null ? '' : params.get('search_keyword');
     const align = params.get('align') === null ? 'board_no' : params.get('align');
     const currentPage = params.get('page') === null ? 1 : params.get('page');
     const [post,setPost] = useState([]);
@@ -44,7 +44,7 @@ export default function Home() {
                     }
                 ));
                 setPost(posts);
-                console.log('[Home Component] 컴포넌트 마운트');
+                console.log('[Home] 컴포넌트 마운트');
             } catch(e){
                 console.error(e.message);
             }
@@ -58,7 +58,7 @@ export default function Home() {
             pathname: '/list',
             search: `align=${pageAlign}`,
         });
-        console.log('[Home Component] align change!');
+        //console.log('[Home Component] align change!');
     };
 
     //검색 필드(textfield) 값 변경될 때마다 호출
@@ -77,7 +77,7 @@ export default function Home() {
             pathname: '/list',
             search: `page=${nextPage}`,
         });
-        console.log('[Home Component] Page Change!');
+        //console.log('[Home Component] Page Change!');
     };
 
     //홈 버튼 클릭시 호출(햄버거 메뉴 버튼에서 홈 선택시에도 호출)
@@ -100,12 +100,12 @@ export default function Home() {
     // };
     
 
-    console.log('[Home Component] posts ::', post);
-    console.log('[Home Component] totalCount ::', totalCount);
-    console.log('[Home Component] align ::', align);
-    console.log('[Home Component] keyword ::', queryKeyword);
-    console.log('[Home Component] target ::', queryTarget);
-    console.log('[Home Component] currentPage ::', currentPage);
+    // console.log('[Home Component] posts ::', post);
+    // console.log('[Home Component] totalCount ::', totalCount);
+    // console.log('[Home Component] align ::', align);
+    // console.log('[Home Component] keyword ::', queryKeyword);
+    // console.log('[Home Component] target ::', queryTarget);
+    // console.log('[Home Component] currentPage ::', currentPage);
 
     return (
             <>

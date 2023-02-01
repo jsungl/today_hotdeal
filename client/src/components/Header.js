@@ -1,5 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { setLogout } from '../modules/users';
+//import { Cookies } from 'react-cookie';
+import axios from 'axios';
 import Typography from '@mui/material/Typography';
 import Toolbar from '@mui/material/Toolbar';
 import Box from '@mui/material/Box';
@@ -40,6 +44,10 @@ export default function Header({target,keyword,setKeyword,setTarget,searchKeywor
     const [anchorElUser, setAnchorElUser] = useState(null);
     const [checked, setChecked] = useState(false);
     const navigate = useNavigate();
+    const dispatch = useDispatch();
+    const userId = useSelector(state => state.userReducer.userId);
+    const isLogined = useSelector(state => state.userReducer.isLogined);
+    //const cookies = new Cookies();
 
     const handleCloseUserMenu = () => {
         setAnchorElUser(null);
@@ -69,6 +77,27 @@ export default function Header({target,keyword,setKeyword,setTarget,searchKeywor
     const onClickJoinMenu = () => {
         setAnchorElUser(null);
         navigate('/signUp');
+    }
+    
+    const onClickMypage = () => {
+        console.log('마이페이지로 이동');
+        setAnchorElUser(null);
+        navigate('/memberInfo');
+    }
+
+    const onClickLogout = async() => {
+        console.log('로그아웃');
+        try {
+            const res = await axios.post(`${process.env.REACT_APP_URL}/user/logout`,{userId});
+            if(res.data.isLogout){
+                dispatch(setLogout()); //store 초기화
+                setAnchorElUser(null);
+                navigate('/');
+                //delete axios.defaults.headers.common['Authorization'];
+            }
+        }catch(err) {
+            console.log(err);
+        }
     }
 
     return (
@@ -234,29 +263,55 @@ export default function Header({target,keyword,setKeyword,setTarget,searchKeywor
                                         >
                                             <AccountCircle sx={{ fontSize: 30 }} />
                                         </IconButton>
-                                        <Menu
-                                            sx={{ mt: '45px' }}
-                                            id="menu-appbar"
-                                            anchorEl={anchorElUser}
-                                            anchorOrigin={{
-                                                vertical: 'top',
-                                                horizontal: 'center',
-                                            }}
-                                            keepMounted
-                                            transformOrigin={{
-                                                vertical: 'top',
-                                                horizontal: 'center',
-                                            }}
-                                            open={Boolean(anchorElUser)}
-                                            onClose={handleCloseUserMenu}
-                                        >
-                                            <MenuItem key={'login'} onClick={onClickLoginMenu}>
-                                                <Typography textAlign="center">로그인</Typography>
-                                            </MenuItem>
-                                            <MenuItem key={'join'} onClick={onClickJoinMenu}>
-                                                <Typography textAlign="center">회원가입</Typography>
-                                            </MenuItem>
-                                        </Menu>
+                                        {isLogined ?
+                                            <Menu
+                                                sx={{ mt: '45px' }}
+                                                id="menu-appbar"
+                                                anchorEl={anchorElUser}
+                                                anchorOrigin={{
+                                                    vertical: 'top',
+                                                    horizontal: 'center',
+                                                }}
+                                                keepMounted
+                                                transformOrigin={{
+                                                    vertical: 'top',
+                                                    horizontal: 'center',
+                                                }}
+                                                open={Boolean(anchorElUser)}
+                                                onClose={handleCloseUserMenu}
+                                            > 
+                                                <MenuItem key={'mypage'} onClick={onClickMypage}>
+                                                    <Typography textAlign="center">마이페이지</Typography>
+                                                </MenuItem>
+                                                <MenuItem key={'logout'} onClick={onClickLogout}>
+                                                    <Typography textAlign="center">로그아웃</Typography>
+                                                </MenuItem>
+                                            </Menu>    
+                                            :
+                                            <Menu
+                                                sx={{ mt: '45px' }}
+                                                id="menu-appbar"
+                                                anchorEl={anchorElUser}
+                                                anchorOrigin={{
+                                                    vertical: 'top',
+                                                    horizontal: 'center',
+                                                }}
+                                                keepMounted
+                                                transformOrigin={{
+                                                    vertical: 'top',
+                                                    horizontal: 'center',
+                                                }}
+                                                open={Boolean(anchorElUser)}
+                                                onClose={handleCloseUserMenu}
+                                            >
+                                                <MenuItem key={'login'} onClick={onClickLoginMenu}>
+                                                    <Typography textAlign="center">로그인</Typography>
+                                                </MenuItem>
+                                                <MenuItem key={'join'} onClick={onClickJoinMenu}>
+                                                    <Typography textAlign="center">회원가입</Typography>
+                                                </MenuItem>
+                                            </Menu>
+                                        }
                                     </Box>
                                 </Toolbar>
                             )}

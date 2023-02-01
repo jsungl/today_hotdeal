@@ -17,14 +17,6 @@ import { setAsync, setAsyncSuccess, setAsyncError, setAsyncInit } from '../../mo
 import { setPostInit } from '../../modules/posts';
 
 
-const theme = createTheme({
-    palette: {
-      primary: {
-        main: '#337ab7',
-      },
-    },
-});
-
 export default function BoardWrite() {
     console.log('=========BoardWrite Component Rendering=========');
     const navigate = useNavigate();
@@ -41,6 +33,14 @@ export default function BoardWrite() {
     const style = {
        paddingRight:'10px'
     }
+
+    const theme = createTheme({
+        palette: {
+          primary: {
+            main: '#337ab7',
+          },
+        },
+    });
 
     //* beforeunload 이벤트시 경고창 표시
     const preventClose = useCallback((e) => {
@@ -59,16 +59,16 @@ export default function BoardWrite() {
     },[]);
 
     useEffect(() => {
-        console.log('[BoardWrite Component] 컴포넌트 마운트');
+        console.log('[BoardWrite] 컴포넌트 마운트');
         window.addEventListener('beforeunload',preventClose);
         window.addEventListener('unload',deleteFolder);
 
         return async() => {
-            console.log('[BoardWrite Component] 컴포넌트 언마운트');
+            console.log('[BoardWrite] 컴포넌트 언마운트');
             window.removeEventListener('beforeunload',preventClose);
             window.removeEventListener('unload',deleteFolder);
-            console.log('[BoardWrite Component] 언마운트 flag ::',store.getState().postReducer.flag);
-            console.log('[BoardWrite Component] 언마운트 userId ::',userId);
+            console.log('[BoardWrite] 언마운트 flag ::',store.getState().postReducer.flag);
+            console.log('[BoardWrite] 언마운트 userId ::',userId);
             if(store.getState().postReducer.flag){
                 try {
                     const res = await axios.delete(process.env.REACT_APP_DELETE_S3_TEMP_OBJECTS,{data:{userId}});
@@ -118,10 +118,11 @@ export default function BoardWrite() {
         await axios.put(process.env.REACT_APP_MOVE_S3_OBJECTS,{userId,postId,uploadList:imageUpload.list}) //응답으로 경로가 포함된 이미지 이름 배열을 받는다
         .then(async (res) => {
             if(res.status === 200){
-                console.log('[BoardWrite Component] S3moveObject 람다함수로부터 응답결과 ::',res);
+                console.log('[BoardWrite] S3moveObject 람다함수로부터 응답결과 ::',res);
                 const temp = []; //경로에서 이름만 잘라 저장할 임시배열
+                //FIXME: push 사용하지 말것!
                 res.data.map(data=>temp.push(data.split("/").slice(-1)[0]));
-                console.log('[BoardWrite Component] 영구폴더로 업로드한 이미지 파일 ::',temp);                
+                console.log('[BoardWrite] 영구폴더로 업로드한 이미지 파일 ::',temp);                
                 let data = JSON.stringify(temp);
                 await axios.post(`${process.env.REACT_APP_URL}/updateImagePath`,{
                     userId,
@@ -133,13 +134,13 @@ export default function BoardWrite() {
                     //navigate('/list',{replace:true});
                 })
                 .catch(err => {
-                    console.log('[BoardWrite Component] DB 이미지 경로 바꾸기 요청 오류',err);
+                    console.log('[BoardWrite] DB 이미지 경로 바꾸기 요청 오류',err);
                     alert('update image path fail!');
                 });
             } 
         })
         .catch(err => {
-            console.log('[BoardWrite Component] 영구폴더 이동 람다함수 실행 오류 ::',err);
+            console.log('[BoardWrite] 영구폴더 이동 람다함수 실행 오류 ::',err);
             alert('upload fail!');
             dispatch(setAsyncError()); //요청 실패
         }); 
@@ -150,8 +151,8 @@ export default function BoardWrite() {
         try {
             e.preventDefault();
             //console.log('[BoardWrite Component] content ::',content);
-            if(content.length !== 0){
-                console.log('[BoardWrite Component] 게시글 등록!');
+            if(content.length !== 0 && userId !== ""){
+                console.log('[BoardWrite] 게시글 등록!');
                 
                 const data = new FormData(e.currentTarget); 
                 const textContent = devideContent(content);
@@ -187,6 +188,7 @@ export default function BoardWrite() {
                         if (data.includes('/temp/')) {
                             let sources = data.match(/<img [^>]*src="[^"]*"[^>]*>/gm).map(x => x.replace(/.*src="([^"]*)".*/, '$1'));
                             let fileName = sources[0].replace(/^.*\//, '');
+                            //FIXME: push 사용하지 말것!
                             imageUpload.list.push(fileName);
                         }
                         return htmlContent;
@@ -209,12 +211,12 @@ export default function BoardWrite() {
                 const {postUrl,productMall,productName,productPrice,deliveryCharge,userId} = uploadData;
                 const fee = Number(deliveryCharge) === 0 ? '무료' : deliveryCharge + '원';
                 uploadData.postTitle = `[${productMall}] ${productName} (${productPrice}원) (${fee})`;
-                console.log('[BoardWrite Component] uploadData ::',uploadData);
+                console.log('[BoardWrite] uploadData ::',uploadData);
                 
                 if(checkUrl(postUrl)) {
                     const result = await axios.post(`${process.env.REACT_APP_URL}/uploadPost`,uploadData); 
                     if(result.data.uploaded){
-                        console.log('[BoardWrite Component] 본문에 이미지 있는지 확인 ::',imageUpload.flag);
+                        console.log('[BoardWrite] 본문에 이미지 있는지 확인 ::',imageUpload.flag);
                         if(imageUpload.flag) {
                             const postId = result.data.postId;
                             uploadPost(userId,postId);
@@ -224,13 +226,14 @@ export default function BoardWrite() {
                             //navigate('/list',{replace:true});
                         }
                     }else {
-                        console.log('[BoardWrite Component] 업로드 폼 전송 실패');
+                        console.log('[BoardWrite] 업로드 폼 전송 실패');
                         alert('upload fail!');
                         dispatch(setAsyncError()); //요청 실패
                     }                
                 }
             }else {
                 alert('내용을 입력하세요!');
+                console.log('[BoardWrite] userId: ',userId);
             }
 
         }catch(err) {

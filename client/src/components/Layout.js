@@ -4,6 +4,7 @@ import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import Header from './Header';
 import Footer from './Footer';
+import store from '../modules/index';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 export default function Layout() {
@@ -13,27 +14,34 @@ export default function Layout() {
     const navigate = useNavigate();
     const searchText = useRef(null); //검색 TextField enter 입력시 focus out
 
-    console.log('[Layout Component] page,align,keyword,target ::',Number(params.get('page')),params.get('align'),params.get('search_keyword'),params.get('search_target'));
+    console.log('[Layout] page,align,keyword,target ::',Number(params.get('page')),params.get('align'),params.get('search_keyword'),params.get('search_target'));
     const queryTarget = params.get('search_target') || 'title_content';
     const queryKeyword = params.get('search_keyword') || '';
     const [target,setTarget] = useState(queryTarget);
     const [keyword,setKeyword] = useState(queryKeyword);
 
+    // useEffect(() => {
+    //     console.log('isLogined :',store.getState().userReducer.isLogined);
+    //     console.log('userId :',store.getState().userReducer.userId);
+    //     console.log('nickname :',store.getState().userReducer.userNickname);
+    //     console.log('[Layout] 컴포넌트 마운트');
+    // },[]);
+
     useEffect(() => {
         setTarget(queryTarget);
         setKeyword(queryKeyword);
-        console.log('[Layout Component] 컴포넌트 마운트');
+        //console.log('[Layout Component] 컴포넌트 마운트');
     },[queryTarget,queryKeyword]);
     
     const searchKeyword = (event) => {
         event.preventDefault();
         searchText.current.blur();
-        console.log('[Layout Component] target ::',target);
-        console.log('[Layout Component] keyword ::',keyword);
+        // console.log('[Layout Component] target ::',target);
+        // console.log('[Layout Component] keyword ::',keyword);
         if(pathname === '/list') {
             // /list
             setParams({search_target:target,search_keyword:keyword});
-            console.log('[Layout Component] pathname: /list');
+            //console.log('[Layout Component] pathname: /list');
         } else {
             // /, /board, ....
             navigate({
@@ -44,7 +52,7 @@ export default function Layout() {
                 })}`
             });
         }
-        console.log('[Layout Component] Search Form Submit');
+        console.log('[Layout] Search Form Submit');
     };
 
     return (

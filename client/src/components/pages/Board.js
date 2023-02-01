@@ -1,5 +1,6 @@
 import {useEffect, useState} from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 import axios from 'axios';
 import DOMPurify from 'dompurify';
@@ -15,7 +16,7 @@ import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import IconButton from '@mui/material/IconButton';
 import styles from '../../style/Board.module.css';
 
-axios.defaults.withCredentials = true;
+//axios.defaults.withCredentials = true;
 
 const TopArea = styled.div`
     padding: 10px;
@@ -43,8 +44,8 @@ export default function Board() {
     const [price, setPrice] = useState(0);
     const [charge, setCharge] = useState(0);
     const [clicked, setClicked] = useState(false);
-    //const [loading, setLoading] = useState(false);
-    const testId = 'suver21'; //로그인한 사용자 ID
+    const userId = useSelector(state => state.userReducer.userId); //로그인한 사용자 ID
+    //const testId = 'suver21'; 
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -151,7 +152,7 @@ export default function Board() {
                 </Box>
             </Box>
             {
-                user === testId &&
+                user === userId &&
                     <Box>
                         <Stack
                             direction="row"

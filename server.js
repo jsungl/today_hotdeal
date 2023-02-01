@@ -2,7 +2,7 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const app = express();
-const db = require('./dbconfig/db');
+const db = require('./config/db');
 
 if (process.env.NODE_ENV === 'production') {
     require("dotenv").config({ path: path.join(__dirname, '.env.production') });
@@ -12,6 +12,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 const port = process.env.PORT; //port 번호
+const userRouter = require('./routes/user');
 
 /* cors 오류 해결 */
 const cors = require('cors');
@@ -23,6 +24,7 @@ app.use(cors({
 app.use(express.json()); // 클라이언트에서 application/json 데이터를 보냈을때 파싱해서 body 객체에 넣어줌
 app.use(express.urlencoded({ extended: true })); // 클라이언트에서 application/x-www-form-urlencoded 데이터를 보냈을때 파싱해서 body 객체에 넣어줌
 app.use(cookieParser({ sameSite: "Lax" }));
+app.use('/user', userRouter);
 
 
 //app.use(express.static(path.join(__dirname, 'client/build')));

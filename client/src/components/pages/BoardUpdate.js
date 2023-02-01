@@ -152,12 +152,15 @@ export default function BoardUpdate() {
                 if(updateResult.data.updated){
                     if(imgNamesArr.deletedList.length !== 0){ //삭제한 이미지가 있는지 확인 -> 업로드 & 삭제 둘다 한 경우
                         let temp = [];
+                        //FIXME: push 사용하지 말것!
                         moveResult.data.map(data=>temp.push(data.split("/").slice(-1)[0]));
                         //console.log('[BoardUpdate Component] 삭제하기전 temp ::',temp);
+                        //FIXME: push 사용하지 말것!
                         imgNamesArr.originList.push(...temp);
                         deletePost(postId);
                     }else {
                         let temp = []; //경로에서 이름만 잘라 저장할 임시배열
+                        //FIXME: push 사용하지 말것!
                         moveResult.data.map(data=>temp.push(data.split("/").slice(-1)[0]));
                         console.log('[BoardUpdate Component] 새로 추가한 이미지 ::',temp);
                         let data = JSON.stringify(temp); //문자열로 변환
@@ -189,6 +192,7 @@ export default function BoardUpdate() {
             if(deleteResult.status === 200){ 
                 //console.log(deleteResult);
                 //console.log('[BoardUpdate Component] 삭제하기전 originList ::',imgNamesArr.originList);
+                //FIXME: splice 메소드 사용하지 말것!
                 imgNamesArr.deletedList.map(x=>imgNamesArr.originList.splice(imgNamesArr.originList.indexOf(x),1));
                 let files = imgNamesArr.originList.length !== 0 ? JSON.stringify(imgNamesArr.originList) : null; //문자열로 변환
                 const result = await axios.put(`${process.env.REACT_APP_URL}/updateImageNames`,{ //DB에서 삭제된 이미지 파일 삭제
@@ -267,6 +271,7 @@ export default function BoardUpdate() {
                             for(var i=0; i<copyImgNames.length;i++){
                                 if(data.includes(copyImgNames[i])){
                                     //console.log(copyImgNames[i]);
+                                    //FIXME: splice 메소드 사용하지 말것!
                                     copyImgNames.splice(copyImgNames.indexOf(copyImgNames[i]),1);
                                     break;
                                 }
@@ -276,6 +281,7 @@ export default function BoardUpdate() {
                             if (data.includes('/temp/')) {
                                 let sources = data.match(/<img [^>]*src="[^"]*"[^>]*>/gm).map(x => x.replace(/.*src="([^"]*)".*/, '$1'));
                                 let fileName = sources[0].replace(/^.*\//, '');
+                                //FIXME: push 사용하지 말것!
                                 imgNamesArr.uploadList.push(fileName);
                             }
                         }

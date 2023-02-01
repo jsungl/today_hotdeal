@@ -1,12 +1,22 @@
 import { useNavigate } from 'react-router-dom';
+// import { useDispatch } from 'react-redux';
+// import axios from 'axios';
+// import { useSelector } from 'react-redux';
+// import { setLogout } from '../modules/users';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import SvgIcon from '@mui/material/SvgIcon';
-
+//import { Cookies } from 'react-cookie';
+//import { useCookies } from 'react-cookie';
 
 export default function BoardListHeader({onClickHome,onChangeAlign,align}) {
     const navigate = useNavigate();
+    // const dispatch = useDispatch();
+    // const isLogined = useSelector(state => state.userReducer.isLogined);
+    //const cookies = new Cookies();
+    //const [cookies] = useCookies(['access_token']);
+    
     const alignItems = [
         {name:'board_no',role:'최신순'},
         {name:'hits',role:'조회순'},
@@ -14,10 +24,16 @@ export default function BoardListHeader({onClickHome,onChangeAlign,align}) {
         {name:'enroll_date',role:'오래된순'}
     ];
 
-    //정렬 버튼 클릭시 호출
+    //* 게시글 정렬
     const onClickAlign = (event) => {
         onChangeAlign(event.target.dataset.name);
     };
+
+
+    //* 글쓰기 페이지 이동
+    const goToWrite = () => {
+        navigate('/boardWrite');
+    }
 
     return (
         <Box
@@ -53,7 +69,7 @@ export default function BoardListHeader({onClickHome,onChangeAlign,align}) {
                 </Button>
             ))}
             <Box sx={{flexGrow:1}}/>
-            <Button variant='outlined' sx={{mr:1}} onClick={()=>navigate('/boardWrite')}>글쓰기</Button>
+            <Button variant='outlined' sx={{mr:1}} onClick={goToWrite}>글쓰기</Button>
         </Box>
     );
 }
