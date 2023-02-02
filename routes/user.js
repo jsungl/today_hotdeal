@@ -19,14 +19,14 @@ router.post('/signUp', async(req, res) => {
     try{
         const result1 = await checkUser.chkId(userId); //아이디 중복검사
         if(result1.length !== 0){
-            return res.status(400).json({ isJoined: false, duplication:"id", message: "이미 사용중인 아이디입니다" });
+            return res.status(409).json({ isJoined: false, duplication:"id", message: "이미 사용중인 아이디입니다" });
         }else {
             user.id = true;
         }
 
         const result2 = await checkUser.chkNickname(userNickname); //닉네임 중복검사
         if(result2.length !== 0){
-            return res.status(400).json({ isJoined: false, duplication:"nickname", message: "이미 사용중인 닉네임입니다" });
+            return res.status(409).json({ isJoined: false, duplication:"nickname", message: "이미 사용중인 닉네임입니다" });
         }else {
             user.nickname = true;
         }
@@ -142,13 +142,13 @@ const authenticateAccessToken = async(req,res,next) => {
         const userInfo = JSON.parse(Buffer.from(cAccessToken.split('.')[1], 'base64').toString()); //access token decode
         if(decoded.message === 'jwt expired'){ //access token 만료
 
-            const refreshToken = await checkUser.chkRefreshToken(userInfo.id); //refresh token 조회
+            const data = await checkUser.getUserInfo(userInfo.id); //refresh token 조회
             if(!cRefreshToken) {
                 res.cookie('access_token','',{ maxAge:0 });
                 return res.status(401).json({authenticated: false, userId:userInfo.id, message:'refresh token이 존재하지 않습니다.'});
             }
 
-            if(cRefreshToken === refreshToken[0].refresh_token) { //DB에 저장되어있는 refresh token 과 비교
+            if(cRefreshToken === data[0].refresh_token) { //DB에 저장되어있는 refresh token 과 비교
                 const myRefreshToken = await jwt.verify(cRefreshToken,jwtConfig.refreshToken().secretKey);
                 if(myRefreshToken.message === 'jwt expired'){ //refresh token 만료
                     const result = await manageUser.delRefreshToken(userInfo.id);
@@ -157,7 +157,7 @@ const authenticateAccessToken = async(req,res,next) => {
                         return res.status(401).json({authenticated: false, userId:userInfo.id, message:'refresh token 만료. 재로그인 필요'});
                     }
                 }else {
-                    const myNewToken = await jwt.reIssueToken({user_id:userInfo.id, user_nickname:userInfo.nickname});
+                    const myNewToken = await jwt.reSignToken({user_id:userInfo.id, user_nickname:userInfo.nickname});
                     res.cookie('access_token',myNewToken,{ httpOnly:true, sameSite:'Lax' });
                     req.decoded = {id:userInfo.id, nickname:userInfo.nickname};
                     next();
@@ -217,7 +217,7 @@ router.get('/checkLogin',async(req,res) => {
         }else {
             let userId = JSON.parse(cUser).userId;
             let isLogined = JSON.parse(cUser).isLogined;
-            const result = isLogined && await checkUser.chkLogin(userId); //아이디로 닉네임 조회
+            const result = isLogined && await checkUser.getUserInfo(userId); //아이디로 닉네임 조회
             
             if(cRemember === true) { //로그인 유지
                 let { accessToken,refreshToken } = await jwt.sign(data[0]);
@@ -250,11 +250,9 @@ router.get('/getUserInfo',async(req,res) => {
 
     try {
         let userId = req.query.userId;
-        //console.log(userId);
         if(!userId) return res.status(400).json({message:'UserId is undefined'});
-        const data = await manageUser.getUserInfo(userId);
+        const data = await checkUser.getUserInfo(userId);
         const post = await getUserPost.allPost(userId);
-        //console.log(post);
         if(data.length !== 0){
             let userInfo = {
                 id: data[0].user_id,
@@ -272,6 +270,102 @@ router.get('/getUserInfo',async(req,res) => {
 
     }
 
+});
+
+
+//* 회원정보 변경
+router.post('/modifyMemberInfo', async(req, res) => {
+    let userId = req.body.userId;
+    let userNickname = req.body.nickName;
+    let userEmail = req.body.email;
+    let nicknameChk = false;
+
+    try {
+        const result = await checkUser.chkNickname(userNickname); //닉네임 중복검사
+        if(result.length !== 0){ //409는 리소스의 현재 상태와 충돌하여 요청을 완료할 수 없을 때 사용한다. 그래서 사용자가 충돌을 해결하고 요청을 다시 제출해야한다.
+            return res.status(409).json({ isModified: false, duplication:"nickname", message: "이미 사용중인 닉네임입니다" });
+        }else {
+            nicknameChk = true;
+        }
+    
+        if(nicknameChk) {
+            db.query('UPDATE Member SET user_nickname=?, user_email=? WHERE user_id=?',[userNickname,userEmail,userId],async(err,data) => {
+                if(err){
+                    console.log(err);
+                }else {
+                    let { accessToken,refreshToken } = await jwt.sign({ user_id:userId, user_nickname: userNickname });
+                    let userInfo = { userId, userNickname };
+                    res.cookie('access_token',accessToken,{ httpOnly:true, sameSite:'Lax' });
+                    res.cookie('refresh_token', refreshToken, { httpOnly:true, sameSite:'Lax' });
+                    
+                    res.status(200).json({ isModified: true, userInfo });
+                }
+            });
+        }
+
+    }catch(err) {
+        console.log('POST /user/modifyMemberInfo :',err);
+    }
+});
+
+//* 비밀번호 변경
+router.post('/modifyMemberPwd', async(req, res) => {
+    let userId = req.body.userId;
+    let userPassword = req.body.password; //기존 비밀번호
+    let userNewPassword = req.body.newPassword; //새로운 비밀번호
+
+    try {
+        const data = await checkUser.getUserInfo(userId); //비밀번호 조회
+        if(data.length !== 0){ 
+            const match = await bcrypt.compare(userPassword, data[0].user_pwd);
+            if(match) {
+                const hashPwd = await bcrypt.hash(userNewPassword, 10); //비밀번호 암호화
+                db.query('UPDATE Member SET user_pwd=? WHERE user_id=?',[hashPwd,userId],(err,data) => {
+                    if(err){
+                        console.log(err);
+                    }else {
+                        return res.status(200).json({ isModified: true });
+                    }
+                });
+
+            }else {
+                //비밀번호 불일치 
+                return res.status(400).json({ isModified: false, incorrect:true, message:'비밀번호가 일치하지 않습니다.' });
+            }
+        }
+
+    }catch(err) {
+        console.log('POST /user/modifyMemberPwd :',err);
+    }
+});
+
+//* 회원탈퇴
+router.post('/leaveMember', async(req, res) => {
+    let userId = req.body.userId;
+    let userPassword = req.body.password;
+
+    try {
+        const data = await checkUser.getUserInfo(userId); //비밀번호 조회
+        if(data.length !== 0){ 
+            const match = await bcrypt.compare(userPassword, data[0].user_pwd);
+            if(match) {
+                db.query('DELETE FROM Member WHERE user_id=?',[userId],(err,data) => {
+                    if(err){
+                        console.log(err);
+                    }else {
+                        delAllCookies(req,res); //쿠키삭제
+                        return res.status(200).json({ result: true });
+                    }
+                });
+
+            }else {
+                //비밀번호 불일치 
+                return res.status(400).json({ result: false, incorrect:true, message:'비밀번호가 일치하지 않습니다.' });
+            }
+        }
+    }catch(err) {
+        console.log('POST /user/leaveMember :',err);
+    }
 });
 
 

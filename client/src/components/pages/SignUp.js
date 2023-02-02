@@ -97,7 +97,7 @@ export default function SignUp() {
         else setPasswordError('');
 
         // 닉네임 유효성 검사
-        const nameRegex = /^[가-힣a-zA-Z]{2,8}$/;
+        const nameRegex = /^[가-힣a-zA-Z0-9]{2,8}$/;
         if (!nameRegex.test(nickName) || nickName.length < 1) setNameError('올바른 닉네임 형식이 아닙니다.');
         else setNameError('');
 

@@ -23,20 +23,9 @@ module.exports = {
             });
         });
     },
-    chkRefreshToken: (userId) => {
+    getUserInfo: (userId) => {
         return new Promise((resolve, reject) => {
-            db.query('SELECT refresh_token FROM Member WHERE user_id=?',[userId],(err,data)=>{
-                if(err){
-                    reject(err);
-                }else {
-                    resolve(data);
-                }
-            });
-        });
-    },
-    chkLogin: (userId) => {
-        return new Promise((resolve, reject) => {
-            db.query('SELECT user_nickname FROM Member WHERE user_id=?',[userId],(err,data)=>{
+            db.query('SELECT * FROM Member WHERE user_id=?',[userId],(err,data) => { //유저정보 조회
                 if(err){
                     reject(err);
                 }else {

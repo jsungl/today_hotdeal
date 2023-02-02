@@ -20,6 +20,12 @@ import FormControl from '@mui/material/FormControl';
 import SearchIcon from '@mui/icons-material/Search';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import TextField from '@mui/material/TextField';
+import Divider from '@mui/material/Divider';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
+import LoginIcon from '@mui/icons-material/Login';
+import LogoutIcon from '@mui/icons-material/Logout';
+import PersonAdd from '@mui/icons-material/PersonAdd';
 import '../style/header.css'; //google web fonts
 
 const customTheme = createTheme({
@@ -46,6 +52,7 @@ export default function Header({target,keyword,setKeyword,setTarget,searchKeywor
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const userId = useSelector(state => state.userReducer.userId);
+    const userNickname = useSelector(state => state.userReducer.userNickname);
     const isLogined = useSelector(state => state.userReducer.isLogined);
     //const cookies = new Cookies();
 
@@ -252,7 +259,6 @@ export default function Header({target,keyword,setKeyword,setTarget,searchKeywor
                                         >
                                             <SearchIcon sx={{ fontSize: 30 }}/>
                                         </IconButton>
-
                                         <IconButton
                                             size="medium"
                                             aria-label="account of current user"
@@ -263,6 +269,7 @@ export default function Header({target,keyword,setKeyword,setTarget,searchKeywor
                                         >
                                             <AccountCircle sx={{ fontSize: 30 }} />
                                         </IconButton>
+                                        
                                         {isLogined ?
                                             <Menu
                                                 sx={{ mt: '45px' }}
@@ -280,14 +287,24 @@ export default function Header({target,keyword,setKeyword,setTarget,searchKeywor
                                                 open={Boolean(anchorElUser)}
                                                 onClose={handleCloseUserMenu}
                                             > 
+                                                <MenuItem key={'userNickname'}>
+                                                    {userNickname} 님
+                                                </MenuItem>
+                                                <Divider />
                                                 <MenuItem key={'mypage'} onClick={onClickMypage}>
-                                                    <Typography textAlign="center">마이페이지</Typography>
+                                                    <ListItemIcon>
+                                                        <ManageAccountsIcon fontSize="small" />
+                                                    </ListItemIcon>
+                                                    마이페이지
                                                 </MenuItem>
                                                 <MenuItem key={'logout'} onClick={onClickLogout}>
-                                                    <Typography textAlign="center">로그아웃</Typography>
+                                                    <ListItemIcon>
+                                                        <LogoutIcon fontSize="small" />
+                                                    </ListItemIcon>
+                                                    로그아웃
                                                 </MenuItem>
-                                            </Menu>    
-                                            :
+                                            </Menu> 
+                                        :
                                             <Menu
                                                 sx={{ mt: '45px' }}
                                                 id="menu-appbar"
@@ -305,10 +322,16 @@ export default function Header({target,keyword,setKeyword,setTarget,searchKeywor
                                                 onClose={handleCloseUserMenu}
                                             >
                                                 <MenuItem key={'login'} onClick={onClickLoginMenu}>
-                                                    <Typography textAlign="center">로그인</Typography>
+                                                    <ListItemIcon>
+                                                        <LoginIcon fontSize="small" />
+                                                    </ListItemIcon>
+                                                    로그인
                                                 </MenuItem>
                                                 <MenuItem key={'join'} onClick={onClickJoinMenu}>
-                                                    <Typography textAlign="center">회원가입</Typography>
+                                                    <ListItemIcon>
+                                                        <PersonAdd fontSize="small" />
+                                                    </ListItemIcon>
+                                                    회원가입
                                                 </MenuItem>
                                             </Menu>
                                         }

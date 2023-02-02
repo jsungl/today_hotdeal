@@ -8,13 +8,5 @@ module.exports = {
                 else resolve(true);
             });
         });
-    },
-    getUserInfo: (userId) => {
-        return new Promise((resolve, reject) => {
-            db.query('SELECT * FROM Member WHERE user_id=?',[userId],(err,data) => { //유저정보 조회
-                if(err) reject(err);
-                else resolve(data);
-            });
-        });
     }
 };

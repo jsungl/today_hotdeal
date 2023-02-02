@@ -30,8 +30,8 @@ module.exports = {
             decoded = jwt.verify(token, secretKey);
             return decoded;
         } catch (err) {
-            return err;
-            //throw err;
+            return err; //user.js에서 에러처리
+
             // if(err.message === 'jwt expired') {
             //     console.log('유효기간이 완료된 토큰 입니다.');
             //     const err = new Error('TokenExpiredError');
@@ -43,7 +43,7 @@ module.exports = {
             // }
         }
     },
-    reIssueToken: (user) => { //토큰 재발급(access token)
+    reSignToken: (user) => { //토큰 재발급(access token)
         const payload = {
             id: user.user_id,
             nickname: user.user_nickname

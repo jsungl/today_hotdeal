@@ -11,8 +11,8 @@ import Login from './components/pages/Login';
 import SignUp from './components/pages/SignUp';
 import MemberInfo from './components/pages/MemberInfo';
 import MemberOwnDocument from './components/pages/MemberOwnDocument';
-import MemberModifyInfo from './components/pages/MemberModifyInfo';
-import MemberModifyPwd from './components/pages/MemberModifyPwd';
+import ModifyMemberInfo from './components/pages/ModifyMemberInfo';
+import ModifyMemberPwd from './components/pages/ModifyMemberPwd';
 import MemberLeave from './components/pages/MemberLeave';
 import FindAccount from './components/pages/FindAccount';
 import BoardUpdate from './components/pages/BoardUpdate';
@@ -76,8 +76,8 @@ export default function App() {
         </Route>
         <Route path='memberInfo' element={<MemberInfo/>}/>
         <Route path='memberInfo/:file' element={<MemberOwnDocument/>} />
-        <Route path='modifyMemberInfo' element={<MemberModifyInfo/>} />
-        <Route path='modifyMemberPassword' element={<MemberModifyPwd/>} />
+        <Route path='modifyMemberInfo' element={<ModifyMemberInfo/>} />
+        <Route path='modifyMemberPassword' element={<ModifyMemberPwd/>} />
         <Route path='memberLeave' element={<MemberLeave/>} />
       </Route>
       <Route element={<PublicRoute restricted={true}/>}>
