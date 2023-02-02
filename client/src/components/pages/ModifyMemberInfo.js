@@ -55,6 +55,8 @@ export default function ModifyMemberInfo() {
             if(err.response.status === 409) {
                 alert(err.response.data.message);
                 err.response.data.duplication === 'nickname' && setNameError('다른 닉네임을 입력해주세요.');
+            } else if(err.response.status === 301) {
+                navigate('/',{ replace: true });
             }else {
                 console.log(err);
                 alert('회원정보 변경 실패');

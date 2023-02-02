@@ -39,17 +39,18 @@ export default function PrivateRoute() {
             const res = await axios.get(`${process.env.REACT_APP_URL}/user/checkUser`);
             if(res.data.authenticated){
                 console.log('[PrivateRoute] 인증성공 :',res.data.userInfo);
-                setAuthenticated(true);
-                
-            }else {
-                console.log('[PrivateRoute] 인증실패');
+                setAuthenticated(true);   
             }
 
         }catch(err) { //토큰 만료 or 인증되지 않는 토큰 -> 로그아웃
-            console.log('[PrivateRoute] 인증에러 :',err);
-            //err.response.data.message && alert(err.response.data.message);
-            dispatch(setLogout());
-            navigate('/login?expired');
+            console.log('[PrivateRoute] 인증실패 :',err);
+            if(err.response.status === 301) {
+                navigate('/',{ replace: true });
+            }else {
+                console.log(err.response.data.message);
+                dispatch(setLogout());
+                navigate('/login?expired');
+            }
         }
     }
 

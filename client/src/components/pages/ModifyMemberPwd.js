@@ -48,8 +48,12 @@ export default function ModifyMemberPwd() {
 
         }catch(err) {
             console.log(err);
-            alert(err.response.data.message);
-            err.response.data.incorrect && setPasswordChk('비밀번호를 다시 입력해주세요.');
+            if(err.response.status === 301) {
+                navigate('/',{ replace: true });
+            }else {
+                alert(err.response.data.message);
+                !err.response.data.isModified && setPasswordChk('비밀번호를 다시 입력해주세요.');
+            }
         }
 
     }

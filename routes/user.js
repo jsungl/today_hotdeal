@@ -6,6 +6,7 @@ const jwt = require('../modules/user/jwt');
 const checkUser = require('../modules/user/checkUser');
 const manageUser = require('../modules/user/manageUser');
 const getUserPost = require('../modules/post/getPost');
+const preventCSRF = require('../modules/preventCSRF'); 
 const router = express.Router();
 
 //* 회원가입
@@ -129,6 +130,9 @@ router.post('/logout',async(req,res) => {
 //* 토큰 유효성 검사
 const authenticateAccessToken = async(req,res,next) => {
     try{
+        const _csrf = preventCSRF.chkReferer(req.headers.referer);
+        if(!_csrf) return res.status(301).json({ redirectUrl: '/' }); //csrf 방어 - referrer 검증
+
         let cAccessToken = req.cookies['access_token'];
         let cRefreshToken = req.cookies['refresh_token'];
         //let token = req.headers.authorization.split(' ')[1];
@@ -247,24 +251,27 @@ router.get('/checkLogin',async(req,res) => {
 
 //* 회원정보 조회
 router.get('/getUserInfo',async(req,res) => {
-
+    const _csrf = preventCSRF.chkReferer(req.headers.referer);
     try {
-        let userId = req.query.userId;
-        if(!userId) return res.status(400).json({message:'UserId is undefined'});
-        const data = await checkUser.getUserInfo(userId);
-        const post = await getUserPost.allPost(userId);
-        if(data.length !== 0){
-            let userInfo = {
-                id: data[0].user_id,
-                nickname: data[0].user_nickname,
-                email: data[0].user_email,
-                joinDate: data[0].join_date,
-            };
-            return res.status(200).json({success:true,userInfo,post});
+        if(_csrf) {
+            let userId = req.query.userId;
+            if(!userId) return res.status(400).json({ message: 'UserId is undefined' });
+            const data = await checkUser.getUserInfo(userId);
+            const post = await getUserPost.allPost(userId);
+            if(data.length !== 0){
+                let userInfo = {
+                    id: data[0].user_id,
+                    nickname: data[0].user_nickname,
+                    email: data[0].user_email,
+                    joinDate: data[0].join_date,
+                };
+                return res.status(200).json({ success: true, userInfo, post });
+            }else {
+                return res.status(404).json({ message: 'UserId is not exist' });
+            }
         }else {
-            return res.status(200).json({success:false,message:'UserId is not exist'});
-        }
-
+            res.status(301).json({ redirectUrl: '/' });
+        }    
     }catch(err) {
         console.log('GET /user/getUserInfo :',err);
 
@@ -281,27 +288,33 @@ router.post('/modifyMemberInfo', async(req, res) => {
     let nicknameChk = false;
 
     try {
-        const result = await checkUser.chkNickname(userNickname); //닉네임 중복검사
-        if(result.length !== 0){ //409는 리소스의 현재 상태와 충돌하여 요청을 완료할 수 없을 때 사용한다. 그래서 사용자가 충돌을 해결하고 요청을 다시 제출해야한다.
-            return res.status(409).json({ isModified: false, duplication:"nickname", message: "이미 사용중인 닉네임입니다" });
+        const _csrf = preventCSRF.chkReferer(req.headers.referer);
+        if(_csrf) {
+            const result = await checkUser.chkNickname(userNickname); //닉네임 중복검사
+            if(result.length !== 0){ //409는 리소스의 현재 상태와 충돌하여 요청을 완료할 수 없을 때 사용한다. 그래서 사용자가 충돌을 해결하고 요청을 다시 제출해야한다.
+                return res.status(409).json({ isModified: false, duplication:"nickname", message: "이미 사용중인 닉네임입니다" });
+            }else {
+                nicknameChk = true;
+            }
+
+            if(nicknameChk) {
+                db.query('UPDATE Member SET user_nickname=?, user_email=? WHERE user_id=?',[userNickname,userEmail,userId],async(err,data) => {
+                    if(err){
+                        console.log(err);
+                    }else {
+                        let { accessToken,refreshToken } = await jwt.sign({ user_id:userId, user_nickname: userNickname });
+                        let userInfo = { userId, userNickname };
+                        res.cookie('access_token',accessToken,{ httpOnly:true, sameSite:'Lax' });
+                        res.cookie('refresh_token', refreshToken, { httpOnly:true, sameSite:'Lax' });
+                        
+                        res.status(200).json({ isModified: true, userInfo });
+                    }
+                });
+            }
         }else {
-            nicknameChk = true;
+            res.status(301).json({ redirectUrl: '/' });
         }
     
-        if(nicknameChk) {
-            db.query('UPDATE Member SET user_nickname=?, user_email=? WHERE user_id=?',[userNickname,userEmail,userId],async(err,data) => {
-                if(err){
-                    console.log(err);
-                }else {
-                    let { accessToken,refreshToken } = await jwt.sign({ user_id:userId, user_nickname: userNickname });
-                    let userInfo = { userId, userNickname };
-                    res.cookie('access_token',accessToken,{ httpOnly:true, sameSite:'Lax' });
-                    res.cookie('refresh_token', refreshToken, { httpOnly:true, sameSite:'Lax' });
-                    
-                    res.status(200).json({ isModified: true, userInfo });
-                }
-            });
-        }
 
     }catch(err) {
         console.log('POST /user/modifyMemberInfo :',err);
@@ -315,23 +328,28 @@ router.post('/modifyMemberPwd', async(req, res) => {
     let userNewPassword = req.body.newPassword; //새로운 비밀번호
 
     try {
-        const data = await checkUser.getUserInfo(userId); //비밀번호 조회
-        if(data.length !== 0){ 
-            const match = await bcrypt.compare(userPassword, data[0].user_pwd);
-            if(match) {
-                const hashPwd = await bcrypt.hash(userNewPassword, 10); //비밀번호 암호화
-                db.query('UPDATE Member SET user_pwd=? WHERE user_id=?',[hashPwd,userId],(err,data) => {
-                    if(err){
-                        console.log(err);
-                    }else {
-                        return res.status(200).json({ isModified: true });
-                    }
-                });
+        const _csrf = preventCSRF.chkReferer(req.headers.referer);
+        if(_csrf) {
+            const data = await checkUser.getUserInfo(userId); //비밀번호 조회
+            if(data.length !== 0){ 
+                const match = await bcrypt.compare(userPassword, data[0].user_pwd);
+                if(match) {
+                    const hashPwd = await bcrypt.hash(userNewPassword, 10); //비밀번호 암호화
+                    db.query('UPDATE Member SET user_pwd=? WHERE user_id=?',[hashPwd,userId],(err,data) => {
+                        if(err){
+                            console.log(err);
+                        }else {
+                            return res.status(200).json({ isModified: true });
+                        }
+                    });
 
-            }else {
-                //비밀번호 불일치 
-                return res.status(400).json({ isModified: false, incorrect:true, message:'비밀번호가 일치하지 않습니다.' });
+                }else {
+                    //비밀번호 불일치 
+                    return res.status(400).json({ isModified: false, message:'비밀번호가 일치하지 않습니다.' });
+                }
             }
+        }else {
+            res.status(301).json({ redirectUrl: '/' });
         }
 
     }catch(err) {
@@ -345,23 +363,28 @@ router.post('/leaveMember', async(req, res) => {
     let userPassword = req.body.password;
 
     try {
-        const data = await checkUser.getUserInfo(userId); //비밀번호 조회
-        if(data.length !== 0){ 
-            const match = await bcrypt.compare(userPassword, data[0].user_pwd);
-            if(match) {
-                db.query('DELETE FROM Member WHERE user_id=?',[userId],(err,data) => {
-                    if(err){
-                        console.log(err);
-                    }else {
-                        delAllCookies(req,res); //쿠키삭제
-                        return res.status(200).json({ result: true });
-                    }
-                });
+        const _csrf = preventCSRF.chkReferer(req.headers.referer);
+        if(_csrf) {
+            const data = await checkUser.getUserInfo(userId); //비밀번호 조회
+            if(data.length !== 0){ 
+                const match = await bcrypt.compare(userPassword, data[0].user_pwd);
+                if(match) {
+                    db.query('DELETE FROM Member WHERE user_id=?',[userId],(err,data) => {
+                        if(err){
+                            console.log(err);
+                        }else {
+                            delAllCookies(req,res); //쿠키삭제
+                            return res.status(200).json({ result: true });
+                        }
+                    });
 
-            }else {
-                //비밀번호 불일치 
-                return res.status(400).json({ result: false, incorrect:true, message:'비밀번호가 일치하지 않습니다.' });
+                }else {
+                    //비밀번호 불일치 
+                    return res.status(400).json({ result: false, message:'비밀번호가 일치하지 않습니다.' });
+                }
             }
+        }else {
+            res.status(301).json({ redirectUrl: '/' });
         }
     }catch(err) {
         console.log('POST /user/leaveMember :',err);

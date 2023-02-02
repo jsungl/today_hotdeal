@@ -30,21 +30,24 @@ export default function MemberInfo() {
 
     useLayoutEffect(() => {
         async function getUserInfo() {
-            const res = await axios.get(`${process.env.REACT_APP_URL}/user/getUserInfo`,{ params:{ userId } });
-            if(res.data.success) {
-                setMemberId(res.data.userInfo.id);
-                setMemberName(res.data.userInfo.nickname);
-                setMemberMail(res.data.userInfo.email);
-                setJoinDate(res.data.userInfo.joinDate.substring(0,10));
-                setPost(res.data.post);
-            }else {
-                console.log(res.data.message);
+            try {
+                const res = await axios.get(`${process.env.REACT_APP_URL}/user/getUserInfo`,{ params:{ userId } });
+                if(res.data.success) {
+                    setMemberId(res.data.userInfo.id);
+                    setMemberName(res.data.userInfo.nickname);
+                    setMemberMail(res.data.userInfo.email);
+                    setJoinDate(res.data.userInfo.joinDate.substring(0,10));
+                    setPost(res.data.post);
+                }
+            }catch(err) {
+                console.log(err);
+                err.response.status === 301 ? navigate('/',{ replace: true }) : console.log(err.response.data.message);
             }
         }
 
         isLogined && getUserInfo();
 
-    },[isLogined,userId]);
+    },[isLogined,userId,navigate]);
 
     const handleModifyMember = () => {
         navigate('/modifyMemberInfo',{state: {isLogined, userInfo}});
