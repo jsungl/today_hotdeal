@@ -1,9 +1,9 @@
 const db = require('../../config/db');
 
 module.exports = {
-    allPost: (userId) => {
+    increaseView: (postId) => {
         return new Promise((resolve, reject) => {
-            db.query('SELECT board_no, title, category, hits, up, enroll_date FROM Board WHERE user_id=?',[userId],(err,data)=>{ //유저의 모든 게시글 조회
+            db.query('UPDATE Board SET hits=hits+1 WHERE board_no=?',[postId],(err,data) => { //조회수 증가
                 if(err) {
                     reject(err);  
                 }else {

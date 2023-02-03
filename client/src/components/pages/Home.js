@@ -28,7 +28,7 @@ export default function Home() {
     useEffect(() => {
         async function fetchData() {
             try {
-                const res = await axios.get(`${process.env.REACT_APP_URL}/getTotalCount`);
+                const res = await axios.get(`${process.env.REACT_APP_URL}/post/getTotalCount`);
                 res.data[0].map(rowData =>
                     setTotalCount(rowData.count)
                 );

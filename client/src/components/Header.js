@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { setLogout } from '../modules/users';
 //import { Cookies } from 'react-cookie';
@@ -51,6 +51,7 @@ export default function Header({target,keyword,setKeyword,setTarget,searchKeywor
     const [checked, setChecked] = useState(false);
     const navigate = useNavigate();
     const dispatch = useDispatch();
+    const { pathname } = useLocation();
     const userId = useSelector(state => state.userReducer.userId);
     const userNickname = useSelector(state => state.userReducer.userNickname);
     const isLogined = useSelector(state => state.userReducer.isLogined);
@@ -78,7 +79,7 @@ export default function Header({target,keyword,setKeyword,setTarget,searchKeywor
 
     const onClickLoginMenu = () => {
         setAnchorElUser(null);
-        navigate('/login');
+        navigate('/login', {state: pathname});
     }
 
     const onClickJoinMenu = () => {

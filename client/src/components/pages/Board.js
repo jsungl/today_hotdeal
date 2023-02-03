@@ -43,18 +43,18 @@ export default function Board() {
     const [name, setName] = useState('');
     const [price, setPrice] = useState(0);
     const [charge, setCharge] = useState(0);
-    const [clicked, setClicked] = useState(false);
+    const [clickedUp, setClickedUp] = useState(false);
     const userId = useSelector(state => state.userReducer.userId); //로그인한 사용자 ID
-    //const testId = 'suver21'; 
     const navigate = useNavigate();
 
     useEffect(() => {
         async function fetchData() {
             await axios
-                .get(`${process.env.REACT_APP_URL}/getBoardContent`, {
+                .get(`${process.env.REACT_APP_URL}/post/getBoardContent`, {
                     // param 으로 postId 값을 넘겨준다.
                     params: {
-                        'postId': postId
+                        'postId': postId,
+                        'userId': userId
                     }
                 })
                 .then((res) => {
@@ -70,6 +70,7 @@ export default function Board() {
                     setName(res.data[0].product_name);
                     setPrice(res.data[0].product_price);
                     setCharge(res.data[0].delivery_charge);
+                    res.data[0].up_chk === 1 && setClickedUp(true);
                     console.log('[Board Component] 컴포넌트 마운트');
                 })
                 .catch((e) => {
@@ -77,12 +78,49 @@ export default function Board() {
                 });
         };
         fetchData();
-    },[postId]);
+    },[postId,userId]);
 
-    const handleUpButton = () => {
-        if(!clicked) {
-            console.log('추천하였습니다.');
-            setClicked('primary');
+    //* 게시글 추천
+    const handleUpBtn = async() => {
+        try {
+            if(!clickedUp) {
+                const res = await axios.post(`${process.env.REACT_APP_URL}/post/increaseUp`,{ postId, userId });
+                if(res.data.result) {
+                    alert(res.data.message);
+                    setClickedUp(true);
+                }
+            }else {
+                const res = await axios.delete(`${process.env.REACT_APP_URL}/post/decreaseUp`,{ data: { postId, userId } });
+                if(res.data.result) {
+                    setClickedUp(false);
+                }
+            }
+
+        }catch(err) {
+            console.log(err);
+            if(err.response.status === 500 || err.response.status === 400) {
+                alert(err.response.data.message);
+            }
+        }
+    }
+
+    //* 게시글 삭제
+    // const deletePost = async() => {
+    //     try {
+    //         const res = await axios.delete(`${process.env.REACT_APP_URL}/deletePost`,{ data: { userId } });
+
+    //     }catch(err) {
+    //         console.log(err);
+    //     }
+
+    // }
+
+    
+    const handleDeleteBtn = () => {
+        if (window.confirm('게시글을 삭제하시겠습니까?')) {
+            //deletePost();
+        }else {
+            return;
         }
     }
 
@@ -145,7 +183,7 @@ export default function Board() {
                         justifyContent="center"
                         alignItems="center"
                     >
-                        <IconButton size="large" color={clicked ? 'primary' : ''} onClick={handleUpButton}>
+                        <IconButton size="large" color={clickedUp ? 'primary' : ''} onClick={handleUpBtn}>
                             <ThumbUpIcon />
                         </IconButton>
                     </Stack>
@@ -161,7 +199,7 @@ export default function Board() {
                             spacing={2}
                         >
                             <Button variant="outlined" size="large" onClick={()=>{navigate(`/boardUpdate/${postId}`)}}>수정</Button>
-                            <Button variant="outlined" size="large">삭제</Button>
+                            <Button variant="outlined" size="large" onClick={handleDeleteBtn}>삭제</Button>
                         </Stack>    
                     </Box>
             }

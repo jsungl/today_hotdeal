@@ -73,12 +73,12 @@ export default function App() {
         <Route element={<PrivateRoute/>}>
           <Route path='boardWrite' element={<BoardWrite/>}/>
           <Route path='boardUpdate/:postId' element={<BoardUpdate />} />
+          <Route path='memberInfo' element={<MemberInfo/>}/>
+          <Route path='memberInfo/:file' element={<MemberOwnDocument/>} />
+          <Route path='modifyMemberInfo' element={<ModifyMemberInfo/>} />
+          <Route path='modifyMemberPassword' element={<ModifyMemberPwd/>} />
+          <Route path='memberLeave' element={<MemberLeave/>} />
         </Route>
-        <Route path='memberInfo' element={<MemberInfo/>}/>
-        <Route path='memberInfo/:file' element={<MemberOwnDocument/>} />
-        <Route path='modifyMemberInfo' element={<ModifyMemberInfo/>} />
-        <Route path='modifyMemberPassword' element={<ModifyMemberPwd/>} />
-        <Route path='memberLeave' element={<MemberLeave/>} />
       </Route>
       <Route element={<PublicRoute restricted={true}/>}>
         <Route path='/login' element={<Login/>} />

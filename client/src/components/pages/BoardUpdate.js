@@ -98,7 +98,7 @@ export default function BoardUpdate() {
 
     useEffect(() => {
         async function getPost() {
-            await axios.get(`${process.env.REACT_APP_URL}/getBoardInfo`, {
+            await axios.get(`${process.env.REACT_APP_URL}/post/getBoardInfo`, {
                 params: {
                     'postId': postId
                 }
@@ -143,7 +143,7 @@ export default function BoardUpdate() {
             // 이미지를 새로 올렸다가 삭제하고 다른것 올린경우 or 새로 올렸다가 삭제한 경우 -> 람다함수 수정
             const moveResult = await axios.put(process.env.REACT_APP_MOVE_S3_OBJECTS,{userId,postId,uploadList:imgNamesArr.uploadList});
             if(moveResult.status === 200){ //새로 업로드한 이미지 경로만 변경.
-                const updateResult = await axios.post(`${process.env.REACT_APP_URL}/updateImagePath`,{
+                const updateResult = await axios.post(`${process.env.REACT_APP_URL}/post/updateImagePath`,{
                     userId,
                     postId,
                     data:false
@@ -195,7 +195,7 @@ export default function BoardUpdate() {
                 //FIXME: splice 메소드 사용하지 말것!
                 imgNamesArr.deletedList.map(x=>imgNamesArr.originList.splice(imgNamesArr.originList.indexOf(x),1));
                 let files = imgNamesArr.originList.length !== 0 ? JSON.stringify(imgNamesArr.originList) : null; //문자열로 변환
-                const result = await axios.put(`${process.env.REACT_APP_URL}/updateImageNames`,{ //DB에서 삭제된 이미지 파일 삭제
+                const result = await axios.put(`${process.env.REACT_APP_URL}/post/updateImageNames`,{ //DB에서 삭제된 이미지 파일 삭제
                     postId,
                     files
                 });

@@ -124,7 +124,7 @@ export default function BoardWrite() {
                 res.data.map(data=>temp.push(data.split("/").slice(-1)[0]));
                 console.log('[BoardWrite] 영구폴더로 업로드한 이미지 파일 ::',temp);                
                 let data = JSON.stringify(temp);
-                await axios.post(`${process.env.REACT_APP_URL}/updateImagePath`,{
+                await axios.post(`${process.env.REACT_APP_URL}/post/updateImagePath`,{
                     userId,
                     postId,
                     data
@@ -214,7 +214,7 @@ export default function BoardWrite() {
                 console.log('[BoardWrite] uploadData ::',uploadData);
                 
                 if(checkUrl(postUrl)) {
-                    const result = await axios.post(`${process.env.REACT_APP_URL}/uploadPost`,uploadData); 
+                    const result = await axios.post(`${process.env.REACT_APP_URL}/post/uploadPost`,uploadData); 
                     if(result.data.uploaded){
                         console.log('[BoardWrite] 본문에 이미지 있는지 확인 ::',imageUpload.flag);
                         if(imageUpload.flag) {

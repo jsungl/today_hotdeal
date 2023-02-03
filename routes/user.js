@@ -5,7 +5,7 @@ const jwtConfig = require('../config/jwt');
 const jwt = require('../modules/user/jwt');
 const checkUser = require('../modules/user/checkUser');
 const manageUser = require('../modules/user/manageUser');
-const getUserPost = require('../modules/post/getPost');
+const getPost = require('../modules/post/getBoardTable');
 const preventCSRF = require('../modules/preventCSRF'); 
 const router = express.Router();
 
@@ -257,7 +257,7 @@ router.get('/getUserInfo',async(req,res) => {
             let userId = req.query.userId;
             if(!userId) return res.status(400).json({ message: 'UserId is undefined' });
             const data = await checkUser.getUserInfo(userId);
-            const post = await getUserPost.allPost(userId);
+            const post = await getPost.allByUserId(userId);
             if(data.length !== 0){
                 let userInfo = {
                     id: data[0].user_id,

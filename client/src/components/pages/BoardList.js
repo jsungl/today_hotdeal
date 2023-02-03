@@ -32,7 +32,7 @@ export default function BoardList() {
     useEffect(() => {
         async function fetchData() {
             try {
-                const res = await axios.get(`${process.env.REACT_APP_URL}/getBoardList`,{
+                const res = await axios.get(`${process.env.REACT_APP_URL}/post/getBoardList`,{
                     params:{
                         'align': params.get('align') || 'board_no',
                         'offset': ((Number(params.get('page')) || 1)-1)*postPerPage,
