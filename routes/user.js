@@ -1,12 +1,15 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 const db = require('../config/db');
 const jwtConfig = require('../config/jwt');
 const jwt = require('../modules/user/jwt');
 const checkUser = require('../modules/user/checkUser');
-const manageUser = require('../modules/user/manageUser');
+const manageToken = require('../modules/user/manageToken');
 const getPost = require('../modules/post/getBoardTable');
-const preventCSRF = require('../modules/preventCSRF'); 
+// const chkReferer = require('../modules/preventCSRF');
+// const nodeMailer = require('../modules/nodeMailer');
+const { chkReferer, nodeMailer } = require('../modules/util');
 const router = express.Router();
 
 //* 회원가입
@@ -117,7 +120,7 @@ router.post('/logout',async(req,res) => {
         let userId = req.body.userId;
         delAllCookies(req,res);
         if(userId){
-            const result = await manageUser.delRefreshToken(userId);
+            const result = await manageToken.delRefreshToken(userId);
             result && res.status(200).json({isLogout: true});
         }
     }catch(err){
@@ -130,7 +133,7 @@ router.post('/logout',async(req,res) => {
 //* 토큰 유효성 검사
 const authenticateAccessToken = async(req,res,next) => {
     try{
-        const _csrf = preventCSRF.chkReferer(req.headers.referer);
+        const _csrf = chkReferer(req.headers.referer);
         if(!_csrf) return res.status(301).json({ redirectUrl: '/' }); //csrf 방어 - referrer 검증
 
         let cAccessToken = req.cookies['access_token'];
@@ -146,7 +149,7 @@ const authenticateAccessToken = async(req,res,next) => {
         const userInfo = JSON.parse(Buffer.from(cAccessToken.split('.')[1], 'base64').toString()); //access token decode
         if(decoded.message === 'jwt expired'){ //access token 만료
 
-            const data = await checkUser.getUserInfo(userInfo.id); //refresh token 조회
+            const data = await checkUser.getUserById(userInfo.id); //refresh token 조회
             if(!cRefreshToken) {
                 res.cookie('access_token','',{ maxAge:0 });
                 return res.status(401).json({authenticated: false, userId:userInfo.id, message:'refresh token이 존재하지 않습니다.'});
@@ -155,7 +158,7 @@ const authenticateAccessToken = async(req,res,next) => {
             if(cRefreshToken === data[0].refresh_token) { //DB에 저장되어있는 refresh token 과 비교
                 const myRefreshToken = await jwt.verify(cRefreshToken,jwtConfig.refreshToken().secretKey);
                 if(myRefreshToken.message === 'jwt expired'){ //refresh token 만료
-                    const result = await manageUser.delRefreshToken(userInfo.id);
+                    const result = await manageToken.delRefreshToken(userInfo.id);
                     if(result) { // refresh token 만료
                         delAllCookies(req,res);
                         return res.status(401).json({authenticated: false, userId:userInfo.id, message:'refresh token 만료. 재로그인 필요'});
@@ -221,7 +224,7 @@ router.get('/checkLogin',async(req,res) => {
         }else {
             let userId = JSON.parse(cUser).userId;
             let isLogined = JSON.parse(cUser).isLogined;
-            const result = isLogined && await checkUser.getUserInfo(userId); //아이디로 닉네임 조회
+            const result = isLogined && await checkUser.getUserById(userId); //아이디로 닉네임 조회
             
             if(cRemember === true) { //로그인 유지
                 let { accessToken,refreshToken } = await jwt.sign(data[0]);
@@ -251,12 +254,12 @@ router.get('/checkLogin',async(req,res) => {
 
 //* 회원정보 조회
 router.get('/getUserInfo',async(req,res) => {
-    const _csrf = preventCSRF.chkReferer(req.headers.referer);
+    const _csrf = chkReferer(req.headers.referer);
     try {
         if(_csrf) {
             let userId = req.query.userId;
             if(!userId) return res.status(400).json({ message: 'UserId is undefined' });
-            const data = await checkUser.getUserInfo(userId);
+            const data = await checkUser.getUserById(userId);
             const post = await getPost.allByUserId(userId);
             if(data.length !== 0){
                 let userInfo = {
@@ -288,7 +291,7 @@ router.post('/modifyMemberInfo', async(req, res) => {
     let nicknameChk = false;
 
     try {
-        const _csrf = preventCSRF.chkReferer(req.headers.referer);
+        const _csrf = chkReferer(req.headers.referer);
         if(_csrf) {
             const result = await checkUser.chkNickname(userNickname); //닉네임 중복검사
             if(result.length !== 0){ //409는 리소스의 현재 상태와 충돌하여 요청을 완료할 수 없을 때 사용한다. 그래서 사용자가 충돌을 해결하고 요청을 다시 제출해야한다.
@@ -328,9 +331,9 @@ router.post('/modifyMemberPwd', async(req, res) => {
     let userNewPassword = req.body.newPassword; //새로운 비밀번호
 
     try {
-        const _csrf = preventCSRF.chkReferer(req.headers.referer);
+        const _csrf = chkReferer(req.headers.referer);
         if(_csrf) {
-            const data = await checkUser.getUserInfo(userId); //비밀번호 조회
+            const data = await checkUser.getUserById(userId); //비밀번호 조회
             if(data.length !== 0){ 
                 const match = await bcrypt.compare(userPassword, data[0].user_pwd);
                 if(match) {
@@ -363,9 +366,9 @@ router.post('/leaveMember', async(req, res) => {
     let userPassword = req.body.password;
 
     try {
-        const _csrf = preventCSRF.chkReferer(req.headers.referer);
+        const _csrf = chkReferer(req.headers.referer);
         if(_csrf) {
-            const data = await checkUser.getUserInfo(userId); //비밀번호 조회
+            const data = await checkUser.getUserById(userId); //비밀번호 조회
             if(data.length !== 0){ 
                 const match = await bcrypt.compare(userPassword, data[0].user_pwd);
                 if(match) {
@@ -391,6 +394,76 @@ router.post('/leaveMember', async(req, res) => {
     }
 });
 
+const createToken = () => {
+    return new Promise((resolve, reject) => {
+        crypto.randomBytes(20, (err, buf) => {
+            if (err) reject(err);
+            resolve(buf.toString('base64'));
+        });
+    });
+}
 
+//* 아이디/비밀번호 찾기
+router.post('/findAccount', async(req, res) => {
+    try {
+        const userMail = req.body.email;
+        if(userMail) {
+            const data = await checkUser.getUserByEmail(userMail);
+            if(data.length !== 0) {
+                //let token = await createToken();
+                let token = '+Hmz5BNPT07oRdtIp9/IZom2HHM=';
+                console.log(token);
+                const createTokenResult = await manageToken.createAuthToken(data[0].user_id,token);
+                if(createTokenResult) {
+                    let encodedToken = token.replace(/&/g,"%26").replace(/\+/g,"%2B");
+                    let info = {userId: data[0].user_id, token: encodedToken, email: userMail};
+                    let sendMailResult = nodeMailer(info);
+                    if(sendMailResult) {
+                        return res.status(200).json({ result: true });
+                    }
+                }
+    
+            }else {
+                return res.status(404).json({ result: false, message:'가입되어있지 않은 메일입니다.' });
+            }
+        }
+
+    }catch(err) {
+        console.log('/POST findAccount ',err);
+    }
+});
+
+//* 비밀번호 재설정
+router.post('/resetPassword', async(req, res) => {
+    try {
+        let userId = req.body.userId;
+        let token = req.body.token;
+        let password = req.body.password;
+
+        const data = await manageToken.verifyAuthToken(token);
+        if(data.length !== 0) {
+            const result = await manageToken.delAuthToken(token);
+            const hashPwd = await bcrypt.hash(password, 10);
+            if(result) {
+                db.query('UPDATE Member SET user_pwd=? WHERE user_id=?',[hashPwd,userId],(err,data) => {
+                    if(err){
+                        console.log(err);
+                    }else {
+                        return res.status(200).json({result: true});
+                    }
+                });
+            }
+
+        }else { //토큰 만료기간이 지났거나 재요청하는 경우
+            return res.status(401).json({ result: false, message:'비밀번호 재설정 시간이 초과되었습니다.' });
+        }
+
+    }catch(err) {
+        console.log('/POST resetPassword ',err);
+
+    }
+
+
+});
  
 module.exports = router;

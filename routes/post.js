@@ -86,7 +86,10 @@ router.get('/getBoardContent',async(req, res) => {
     try {
         let postId = req.query.postId;
         let userId = req.query.userId;
+        let userInfo = req.cookies['user'];
+        //console.log('userInfo: ',userInfo);
         let myIp = getUserIP(req);
+
         if(req.cookies[myIp] === undefined){
             //res.cookie('postId',postId,{ sameSite: 'none', secure: true});
             res.cookie(myIp,postId,{
@@ -105,20 +108,25 @@ router.get('/getBoardContent',async(req, res) => {
             }
         }
         
-        let subSQL = 'SELECT count(*) FROM Up WHERE user_id=? AND board_no=?';
-        db.query('SELECT *,(' + subSQL +') AS up_chk FROM Board WHERE board_no = ?',[userId,postId,postId],(err, data) => {
-    
-            if(err) {
-                res.send(err);
-            } else {
-                res.send(data);
+        if(userId) { //로그인한 경우
+            let data = await getPost.allByPostIdOnLogin(postId,userId);
+            if(data.length === 0) {
+                return res.status(404).json({message:'게시물이 존재하지 않습니다.'}); //410도 맞을것같다
+            }else {
+                return res.send(data);
             }
-            
-        });
+        }else { //비로그인
+            let data = await getPost.allByPostId(postId);
+            if(data.length === 0) {
+                return res.status(404).json({message:'게시물이 존재하지 않습니다.'}); //410도 맞을것같다
+            }else {
+                return res.send(data);
+            }
+        }
 
     }catch(err) {
         console.log(err);
-        res.send(err);
+        //res.send(err);
     }
 });
 
@@ -202,34 +210,28 @@ router.put('/updatePost',(req,res) => {
         [title,htmlContent,textContent,name,price,dc,postId],(err,data) => {
             if (err) {
                 console.log('/updatePost error :: ',err);
-                res.status(500).json({updated: false, error: {message:'Update Fail!'}});
+                return res.status(500).json({updated: false, error: {message:'Update Fail!'}});
             } else{
-                res.status(200).json({updated: true, message:'Update Success!'});
+                return res.status(200).json({updated: true, message:'Update Success!'});
             }
         }
     );
 });
 
 //* 게시물 정보와 이미지 파일 조회(게시글 수정시)
-router.get('/getBoardInfo',(req, res) => {
-    let postId = req.query.postId;
-    db.query('SELECT * FROM Board WHERE board_no = ?',[postId],(err, data) => {
-      if(err) {
-        console.log('/getBoardInfo error1 ::',err);
+router.get('/getBoardInfo',async(req, res) => {
+    try {
+        let postId = req.query.postId;
+        let data = await getPost.allByPostId(postId);
+        const boardInfo = data;
+        let data2 = await getImage.fileNameByPostId(postId);
+        console.log("/getBoardInfo 이미지 파일 ::",data2);
+        res.status(200).json({boardInfo,imageNames:data2[0] === undefined ? null : data2[0].file_name});
+
+    }catch(err) {
+        console.log('/GET getBoardInfo ',err);
         res.send(err);
-      } else{
-            const boardInfo = data;
-            db.query('SELECT file_name FROM Image WHERE board_no=?',[postId],(err,data2) => {
-              if(err) {
-                console.log('/getBoardInfo error2 ::',err);
-                res.send(err);
-              } else{
-                console.log("/getBoardInfo 이미지 파일 ::",data2);
-                res.status(200).json({boardInfo,imageNames:data2[0] === undefined ? null : data2[0].file_name});
-              }
-            });
-        }
-    });
+    }
 });
 
 //* 게시물 이미지 파일 이름 수정
@@ -264,7 +266,7 @@ router.put('/updateImageNames',async(req,res) => {
         }
 
     }catch(err) {
-        console.log('/PUT updateImageNames',err);
+        console.log('/PUT updateImageNames ',err);
         res.send(err);
     }
 });
@@ -277,7 +279,7 @@ router.post('/increaseUp',(req,res) => {
     if(userId && postId) {
         db.query('INSERT INTO Up(user_id,board_no) VALUES(?,?)',[userId,postId],(err,data) => {
             if(err){
-                console.log('/POST increaseUp',err);
+                console.log('/POST increaseUp ',err);
                 res.status(500).json({result: false, message:'추천에 실패하였습니다.'});
             }else{
                 res.status(200).json({result: true, message:'게시물 추천하였습니다!'});
@@ -288,7 +290,7 @@ router.post('/increaseUp',(req,res) => {
     }
 });
 
-//* 게시글 추천 취소
+//* 게시물 추천 취소
 router.delete('/decreaseUp',(req,res) => {
     let userId = req.body.userId;
     let postId = req.body.postId;
@@ -296,7 +298,7 @@ router.delete('/decreaseUp',(req,res) => {
     if(userId && postId) {
         db.query('DELETE FROM Up WHERE user_id=? AND board_no=?',[userId,postId],(err,data) => {
             if(err){
-                console.log('/DELETE decreaseUp',err);
+                console.log('/DELETE decreaseUp ',err);
                 res.status(500).json({result: false});
             }else{
                 res.status(200).json({result: true});
@@ -306,6 +308,25 @@ router.delete('/decreaseUp',(req,res) => {
         res.status(400).json({result: false});
     }
     
+});
+
+//* 게시물 삭제
+router.delete('/deletePost',(req,res) => {
+    let userId = req.body.userId;
+    let postId = req.body.postId;
+
+    if(userId && postId) {
+        db.query('DELETE FROM Board WHERE user_id=? AND board_no=?',[userId,postId],(err,data) => {
+            if(err){
+                console.log('/DELETE deletePost ',err);
+                res.status(500).json({result: false});
+            }else{
+                res.status(200).json({result: true});
+            }
+        });
+    }else {
+        res.status(400).json({result: false});
+    } 
 });
 
 

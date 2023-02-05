@@ -11,7 +11,8 @@ import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import Stack from '@mui/material/Stack';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import CircularProgress from "@mui/material/CircularProgress";
+import Backdrop from '@mui/material/Backdrop';
+import CircularProgress from '@mui/material/CircularProgress';
 import store from '../../modules/index';
 import { setAsync, setAsyncSuccess, setAsyncError, setAsyncInit } from '../../modules/asyncReqState';
 import { setPostInit } from '../../modules/posts';
@@ -157,7 +158,7 @@ export default function BoardUpdate() {
                         //console.log('[BoardUpdate Component] 삭제하기전 temp ::',temp);
                         //FIXME: push 사용하지 말것!
                         imgNamesArr.originList.push(...temp);
-                        deletePost(postId);
+                        deleteS3Image(postId);
                     }else {
                         let temp = []; //경로에서 이름만 잘라 저장할 임시배열
                         //FIXME: push 사용하지 말것!
@@ -185,7 +186,7 @@ export default function BoardUpdate() {
     }
     
     //*게시글 수정시 삭제한 이미지가 있으면 S3 영구폴더에서 해당 이미지 삭제 
-    const deletePost = async(postId) => {
+    const deleteS3Image = async(postId) => {
         try{
             console.log('[BoardUpdate Component] 삭제한 파일 ::',imgNamesArr.deletedList);
             const deleteResult = await axios.delete(process.env.REACT_APP_DELETE_S3_POST_OBJECTS,{data:{postId,files:imgNamesArr.deletedList}});
@@ -320,7 +321,7 @@ export default function BoardUpdate() {
                     }else {
                         //게시글만 수정한 경우 or 이미지만 삭제한 경우 or 이미지 복붙한 경우
                         if(imgNamesArr.deletedList.length !== 0){ //삭제한 이미지가 있는 경우(빈 배열이 아닌경우)
-                            deletePost(postId);
+                            deleteS3Image(postId);
                         } 
                         alert('Update Success!');
                         dispatch(setAsyncSuccess()); //요청성공
@@ -345,78 +346,73 @@ export default function BoardUpdate() {
 
     return(
         <>
-        {loading ? 
-            <Box sx={{ 
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                height: "100vh"
-            }}>
-                <CircularProgress />
-            </Box>
-            :
-            <>
-                <Typography variant="h5" align='center' gutterBottom sx={{borderBottom:'1px solid #888'}}>
-                    핫딜 수정
-                </Typography>
-                <Box component="form" onSubmit={handleSubmit}>
-                    <Box sx={{marginTop:'30px',marginBottom:'50px'}}>
-                        <table>
-                            <tbody>
-                                <tr>
-                                    <td style={style}>상품 분류</td>
-                                    <td>
-                                        <TextField select name="postCategory" size="small" value={category} disabled>
-                                            <MenuItem value={0}>먹거리</MenuItem>
-                                            <MenuItem value={1}>PC제품</MenuItem>
-                                            <MenuItem value={2}>가전제품</MenuItem>
-                                            <MenuItem value={3}>생활용품</MenuItem>
-                                            <MenuItem value={4}>의류</MenuItem>
-                                        </TextField>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style={style}>URL 링크</td>
-                                    <td><TextField name='postUrl' size="small" margin="dense" sx={{width:300}} type="url" value={url} disabled/></td>
-                                </tr>
-                                <tr>
-                                    <td>쇼핑몰</td>
-                                    <td><TextField name='productMall' size="small" margin="dense" value={mall} disabled/></td>
-                                </tr>
-                                <tr>
-                                    <td>상품명</td>
-                                    <td><TextField name='productName' size="small" margin="dense" value={name} required onChange={(e)=>{setName(e.target.value)}}/></td>
-                                </tr>
-                                <tr>
-                                    <td>가격</td>
-                                    <td><TextField name='productPrice' size="small" margin="dense" type="number" value={price} required onChange={(e)=>{setPrice(e.target.value)}}/></td>
-                                </tr>
-                                <tr>
-                                    <td>배송비</td>
-                                    <td><TextField name='deliveryCharge' size="small" margin="dense" type="number" value={charge} required onChange={(e)=>{setCharge(e.target.value)}}/></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </Box>
-                    <UpdateEditor userId={userId} content={originData}/>
-                    <Stack
-                        direction="row"
-                        justifyContent="flex-end"
-                        alignItems="center"
-                        spacing={2}
-                        sx={{
-                            mt:3,
-                            mb:2
-                        }}
-                    >
-                        <ThemeProvider theme={theme}>
-                            <Button type="submit" variant="contained" size="small">등록</Button>
-                            <Button variant="contained" size="small" onClick={()=>navigate(-1)}>취소</Button>
-                        </ThemeProvider>
-                    </Stack>
+            <Backdrop 
+                sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+                open={loading}
+            >
+                <CircularProgress color="inherit" />
+            </Backdrop>
+        
+            <Typography variant="h5" align='center' gutterBottom sx={{borderBottom:'1px solid #888'}}>
+                핫딜 수정
+            </Typography>
+            <Box component="form" onSubmit={handleSubmit}>
+                <Box sx={{marginTop:'30px',marginBottom:'50px'}}>
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td style={style}>상품 분류</td>
+                                <td>
+                                    <TextField select name="postCategory" size="small" value={category} disabled>
+                                        <MenuItem value={0}>먹거리</MenuItem>
+                                        <MenuItem value={1}>PC제품</MenuItem>
+                                        <MenuItem value={2}>가전제품</MenuItem>
+                                        <MenuItem value={3}>생활용품</MenuItem>
+                                        <MenuItem value={4}>의류</MenuItem>
+                                    </TextField>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style={style}>URL 링크</td>
+                                <td><TextField name='postUrl' size="small" margin="dense" sx={{width:300}} type="url" value={url} disabled/></td>
+                            </tr>
+                            <tr>
+                                <td>쇼핑몰</td>
+                                <td><TextField name='productMall' size="small" margin="dense" value={mall} disabled/></td>
+                            </tr>
+                            <tr>
+                                <td>상품명</td>
+                                <td><TextField name='productName' size="small" margin="dense" value={name} required onChange={(e)=>{setName(e.target.value)}}/></td>
+                            </tr>
+                            <tr>
+                                <td>가격</td>
+                                <td><TextField name='productPrice' size="small" margin="dense" type="number" value={price} required onChange={(e)=>{setPrice(e.target.value)}}/></td>
+                            </tr>
+                            <tr>
+                                <td>배송비</td>
+                                <td><TextField name='deliveryCharge' size="small" margin="dense" type="number" value={charge} required onChange={(e)=>{setCharge(e.target.value)}}/></td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </Box>
-            </>
-        }
+                <UpdateEditor userId={userId} content={originData}/>
+                <Stack
+                    direction="row"
+                    justifyContent="flex-end"
+                    alignItems="center"
+                    spacing={2}
+                    sx={{
+                        mt:3,
+                        mb:2
+                    }}
+                >
+                    <ThemeProvider theme={theme}>
+                        <Button type="submit" variant="contained" size="small">등록</Button>
+                        <Button variant="contained" size="small" onClick={()=>navigate(-1)}>취소</Button>
+                    </ThemeProvider>
+                </Stack>
+            </Box>
+            
         </>
     );
 };

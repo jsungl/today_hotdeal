@@ -154,15 +154,15 @@ export default function BoardList() {
     //     setParams({search_target:target,search_keyword:keyword});
     // };
     
-
-    console.log('[BoardList Component] post ::', post);
-    console.log('[BoardList Component] totalCount ::', totalCount);
-    console.log('[BoardList Component] align ::', align);
-    console.log('[BoardList Component] keyword ::', queryKeyword);
-    console.log('[BoardList Component] target ::', queryTarget);
-    console.log('[BoardList Component] page ::', page);
-
-
+    let BoardListInfo = {
+        post,
+        totalCount,
+        align,
+        queryKeyword,
+        queryTarget,
+        page
+    };
+    console.log('[BoardList] BoardListInfo: ',BoardListInfo);
 
     return (
             <>

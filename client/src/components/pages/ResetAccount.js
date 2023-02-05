@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
@@ -17,7 +17,7 @@ import TableRow from '@mui/material/TableRow';
 import styled from 'styled-components';
 import Stack from '@mui/material/Stack';
 import FormHelperText from '@mui/material/FormHelperText';
-import LockOpenOutlinedIcon from '@mui/icons-material/LockOpenOutlined';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 
@@ -25,11 +25,13 @@ const InfoBox = styled.div`
     color: #777;
 `;
 
-export default function FindAccount() {
+export default function ResetAccount() {
+    const [passwordState, setPasswordState] = useState('');
+    const [passwordError, setPasswordError] = useState('');
+    const [params] = useSearchParams();
+    const token = params.get('token');
+    const userId = params.get('userId');
 
-    console.log('=========FindAccount Component Rendering=========');
-    const navigate = useNavigate();
-    const [emailError, setEmailError] = useState('');
     const theme = createTheme({
         palette: {
           primary: {
@@ -37,40 +39,49 @@ export default function FindAccount() {
           },
         },
     });
-    
-
 
     const onhandlePost = async(data) => {
+        console.log(data);
         try {
-            const res = await axios.post(`${process.env.REACT_APP_URL}/user/findAccount`,{ email: data });
-            let msg = data + ' 메일로 인증 정보를 담은 메일이 발송되었습니다. 메일이 보이지 않으면 스팸보관함을 열어보시길 바랍니다.';
+            const res = await axios.post(`${process.env.REACT_APP_URL}/user/resetPassword`,data);
             if(res.data.result) {
-                alert(msg);
+                alert('비밀번호가 변경되었습니다.');
             }
         }catch(err) {
             console.log(err);
-            if(err.response.status === 404) {
+            if(err.response.status === 401) {
                 alert(err.response.data.message);
-                setEmailError('다시 입력해주세요');
             }
         }
+
     }
 
-    const onFindAccount = (e) => {
-        //아이디,비밀번호 찾기
+    const onResetPassword = (e) => {
         e.preventDefault();
         const data = new FormData(e.currentTarget);
-        const userEmail = data.get('email');
+        const password = data.get('password');
+        const rePassword = data.get('rePassword');
 
-        // 이메일 유효성 체크
-        const emailRegex = /([\w-.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/;
-        if (!emailRegex.test(userEmail)) setEmailError('올바른 이메일 형식이 아닙니다.');
-        else setEmailError('');
+        // 비밀번호 유효성 체크
+        const passwordRegex = /^(?=.*[a-zA-Z])(?=.*[!@#$%*])(?=.*[0-9]).{8,12}$/;
+        if (!passwordRegex.test(password)) setPasswordState('올바른 비밀번호 형식이 아닙니다.');
+        else setPasswordState('');
 
-        if (emailRegex.test(userEmail)) {
-            onhandlePost(userEmail);
+        // 비밀번호 같은지 체크
+        if (password !== rePassword) setPasswordError('비밀번호가 일치하지 않습니다.');
+        else setPasswordError('');
+
+        const resetData = { token, userId, password, rePassword };
+
+
+        if (
+            passwordRegex.test(password) && 
+            password === rePassword
+        ) {
+            onhandlePost(resetData);
             e.target.reset();
         }
+
     }
 
     return (
@@ -90,13 +101,13 @@ export default function FindAccount() {
                 }}
             >
                 <Avatar sx={{ m: 1, bgcolor: '#337ab7' }}>
-                    <LockOpenOutlinedIcon />
+                    <LockOutlinedIcon />
                 </Avatar>
                 <Typography component="h1" variant="h5">
-                    Find Account
+                    비밀번호 재설정
                 </Typography>
             </Box>
-            <Box component="form" onSubmit={onFindAccount} sx={{mb:8}}>
+            <Box component="form" onSubmit={onResetPassword} sx={{mb:8}}>
                 <TableContainer>
                     <Table>
                         <TableHead>
@@ -110,25 +121,30 @@ export default function FindAccount() {
                                         fontWeight:'700'
                                     }}
                                 >
-                                    아이디/비밀번호 찾기
+                                    비밀번호 재설정
                                 </TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             <TableRow>
-                                <TableCell sx={{background:'#f9f9f9'}}>
-                                    <Typography noWrap>이메일 주소</Typography>
+                                <TableCell sx={{background:"#f9f9f9"}}>
+                                    <Typography>비밀번호</Typography>
                                 </TableCell>
                                 <TableCell>
-                                    <TextField name='email' size="small" error={emailError !== '' || false} required />
-                                    <FormHelperText error>{emailError}</FormHelperText>
+                                    <TextField name="password" type="password" size="small" error={passwordState !== '' || false} required/>
+                                    <FormHelperText error>{passwordState}</FormHelperText>
+                                    <InfoBox>
+                                        <span>비밀번호는 8~12자 사이의 영문+숫자로 이루어져야 하며 특수문자(!@#$%*)를 반드시 포함하여야 합니다.</span>
+                                    </InfoBox>
                                 </TableCell>
                             </TableRow>
                             <TableRow>
-                                <TableCell colSpan={2} sx={{borderBottom:'1px solid #888'}}>
-                                    <InfoBox>
-                                        <span>가입할 때 등록하신 메일 주소를 입력하시고 "아이디/비밀번호 찾기" 버튼을 클릭해주세요.</span>
-                                    </InfoBox>
+                                <TableCell component="th" scope="row" sx={{background:"#f9f9f9", borderBottom:"1px solid #888"}}>
+                                    <Typography noWrap>비밀번호 확인</Typography>
+                                </TableCell>
+                                <TableCell sx={{ borderBottom:"1px solid #888" }}>
+                                    <TextField name="rePassword" type="password" size="small" error={passwordError !== '' || false} required/>
+                                    <FormHelperText error>{passwordError}</FormHelperText>
                                 </TableCell>
                             </TableRow>
                         </TableBody>
@@ -145,8 +161,7 @@ export default function FindAccount() {
                     }}
                 >
                     <ThemeProvider theme={theme}>
-                        <Button type="submit" variant="contained" size="small">아이디/비번 찾기</Button>
-                        <Button variant="contained" size="small" onClick={()=>navigate('/')}>취소</Button>
+                        <Button type="submit" variant="contained" size="small">등록</Button>
                     </ThemeProvider>
                 </Stack>
             </Box>
