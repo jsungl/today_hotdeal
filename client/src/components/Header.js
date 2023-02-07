@@ -97,7 +97,7 @@ export default function Header({target,keyword,setKeyword,setTarget,searchKeywor
         console.log('로그아웃');
         setAnchorElUser(null);
         try {
-            const res = await axios.post(`${process.env.REACT_APP_URL}/user/logout`,{userId});
+            const res = await axios.post(`${process.env.REACT_APP_URL}/user/logout`,{userId},{withCredentials: true});
             if(res.data.isLogout){
                 dispatch(setLogout()); //store 초기화
                 navigate('/');

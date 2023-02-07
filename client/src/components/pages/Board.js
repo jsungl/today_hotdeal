@@ -61,7 +61,8 @@ export default function Board() {
                     params: {
                         'postId': postId,
                         'userId': userId
-                    }
+                    },
+                    withCredentials: true
                 })
                 .then((res) => {
                     console.log(res);

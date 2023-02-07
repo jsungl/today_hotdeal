@@ -25,7 +25,7 @@ export default function PrivateRoute() {
     const initializeUser = async() => {
         try {
             console.log('[PrivateRoute] 로그인검사');
-            const res = await axios.get(`${process.env.REACT_APP_URL}/user/checkLogin`);
+            const res = await axios.get(`${process.env.REACT_APP_URL}/user/checkLogin`,{withCredentials: true});
             if(res.data.isLogined) {
                 setLogin(true);
             }
@@ -37,7 +37,7 @@ export default function PrivateRoute() {
 
     const chkAuthenticated = async() => {
         try {
-            const res = await axios.get(`${process.env.REACT_APP_URL}/user/checkUser`);
+            const res = await axios.get(`${process.env.REACT_APP_URL}/user/checkUser`,{withCredentials: true});
             if(res.data.authenticated){
                 console.log('[PrivateRoute] 인증성공 :',res.data.userInfo);
                 setAuthenticated(true);   

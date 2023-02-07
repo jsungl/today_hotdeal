@@ -38,7 +38,7 @@ export default function App() {
     async function initializeUser() {
       try{
         console.log('[App] 로그인검사');
-        const result = await axios.get(`${process.env.REACT_APP_URL}/user/checkLogin`);
+        const result = await axios.get(`${process.env.REACT_APP_URL}/user/checkLogin`,{withCredentials: true});
         console.log('[App] 로그인 :',result.data.isLogined);
         if(result.data.isLogined) { //로그인
           console.log('[App] 로그인한 유저 정보 : ',result.data.userInfo);

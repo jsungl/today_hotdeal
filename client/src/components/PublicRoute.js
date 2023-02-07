@@ -22,7 +22,7 @@ export default function PublicRoute({restricted}){
     const initializeUser = async() => {
         try {
             console.log('[PublicRoute] 로그인검사');
-            const res = await axios.get(`${process.env.REACT_APP_URL}/user/checkLogin`);
+            const res = await axios.get(`${process.env.REACT_APP_URL}/user/checkLogin`,{withCredentials: true});
             if(res.data.isLogined) {
                 setLogin(true);
             }
