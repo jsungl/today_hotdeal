@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { setLogout } from '../../modules/users';
@@ -17,13 +17,17 @@ import FormHelperText from '@mui/material/FormHelperText';
 import Alert from '@mui/material/Alert';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
-export default function MemberLeave() {
-    const location = useLocation();
+export default function MemberLeave({isLogined, userId}) {
+    // const location = useLocation();
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const isLogined = location.state.isLogined;
-    const userId = location.state.userId;
     const [passwordChk, setPasswordChk] = useState('');
+    
+    // const isLogined = location.state.isLogined;
+    // const userId = location.state.userId;
+    console.log('[MemberLeave] isLogined: ',isLogined);
+    console.log('[MemberLeave] userId: ',userId);
+
 
     const theme = createTheme({
         palette: {

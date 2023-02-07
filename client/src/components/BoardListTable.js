@@ -46,7 +46,7 @@ export default function BoardListTable({post}) {
                             >
                                 <TableCell align="center">{data.no}</TableCell>
                                 <TableCell align="center"><StyledLink to={`/board/${data.no}`}>{data.title}</StyledLink></TableCell>
-                                <TableCell align="center">{data.userId}</TableCell>
+                                <TableCell align="center">{data.nickname}</TableCell>
                                 <TableCell align="center">{data.date}</TableCell>
                                 <TableCell align="center">{data.hits}</TableCell>
                                 <TableCell align="center">{data.up}</TableCell>

@@ -55,7 +55,7 @@ export default function Login() {
                 dispatch(setLogin(user)); //store에 유저정보 저장
                 //TODO: 이전에 보던 페이지로 이동시키기
                 if (state) {
-                    console.log('[Login] 이전에 보던 페이지 :',state);
+                    console.log('[Login] 이전에 보던 페이지 ',state);
                     navigate(state);
                 } else {
                     navigate('/');

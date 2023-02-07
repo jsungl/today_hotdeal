@@ -95,11 +95,11 @@ export default function Header({target,keyword,setKeyword,setTarget,searchKeywor
 
     const onClickLogout = async() => {
         console.log('로그아웃');
+        setAnchorElUser(null);
         try {
             const res = await axios.post(`${process.env.REACT_APP_URL}/user/logout`,{userId});
             if(res.data.isLogout){
                 dispatch(setLogout()); //store 초기화
-                setAnchorElUser(null);
                 navigate('/');
                 //delete axios.defaults.headers.common['Authorization'];
             }

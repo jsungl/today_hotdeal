@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { setLogin } from '../../modules/users';
 import Box from '@mui/material/Box';
@@ -24,14 +24,16 @@ const InfoBox = styled.div`
 `;
 
 
-export default function ModifyMemberInfo() {
+export default function ModifyMemberInfo({isLogined, userInfo}) {
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const location = useLocation();
+    //const location = useLocation();
     const [emailError, setEmailError] = useState('');
     const [nameError, setNameError] = useState('');
-    const isLogined = location.state.isLogined;
-    const userInfo = location.state.userInfo;
+    // const isLogined = location.state.isLogined;
+    // const userInfo = location.state.userInfo;
+    console.log('[ModifyMemberInfo] isLogined: ',isLogined);
+    console.log('[ModifyMemberInfo] userInfo: ',userInfo);
 
     const theme = createTheme({
         palette: {
@@ -54,8 +56,8 @@ export default function ModifyMemberInfo() {
         }catch(err) {
             if(err.response.status === 409) {
                 alert(err.response.data.message);
-                err.response.data.duplication === 'nickname' && setNameError('다른 닉네임을 입력해주세요.');
-            } else if(err.response.status === 301) {
+                err.response.data.duplication === 'nickname' ? setNameError('다른 닉네임을 입력해주세요.') : setEmailError('다른 이메일을 입력해주세요.')
+            }else if(err.response.status === 301) {
                 navigate('/',{ replace: true });
             }else {
                 console.log(err);
@@ -73,16 +75,24 @@ export default function ModifyMemberInfo() {
             email: data.get('email')
         };
         const { nickName, email } = modifiedData;
+        
 
+        if(userInfo.nickname === nickName && userInfo.email === email) {
+            alert('회원정보 변경 완료');
+            navigate('/memberInfo',{replace:true});
+        
+        }
+            
         // 닉네임 유효성 검사
         const nameRegex = /^[가-힣a-zA-Z0-9]{2,8}$/;
         if (!nameRegex.test(nickName) || nickName.length < 1) setNameError('올바른 닉네임 형식이 아닙니다.');
         else setNameError('');
-
+        
         // 이메일 유효성 체크
         const emailRegex = /([\w-.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/;
         if (!emailRegex.test(email)) setEmailError('올바른 이메일 형식이 아닙니다.');
         else setEmailError('');
+            
 
         if (
             nameRegex.test(nickName) && 

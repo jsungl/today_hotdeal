@@ -38,7 +38,7 @@ router.get('/getBoardList',(req, res) => {
       case 'writer':
           //글쓴이     
           subSQL += ` WHERE user_id like ${db.escape(keyword)}`;
-          mainSQL = 'SELECT *,(' + subSQL + `) count FROM Board WHERE user_id like ${db.escape(keyword)}`;
+          mainSQL = 'SELECT *,(' + subSQL + `) count FROM Board WHERE user_nickname like ${db.escape(keyword)}`;
           break;
       default:
           //제목+내용

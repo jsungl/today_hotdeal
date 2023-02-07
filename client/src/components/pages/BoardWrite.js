@@ -269,6 +269,7 @@ export default function BoardWrite() {
                                         <MenuItem value={2}>가전제품</MenuItem>
                                         <MenuItem value={3}>생활용품</MenuItem>
                                         <MenuItem value={4}>의류</MenuItem>
+                                        <MenuItem value={5}>세일정보</MenuItem>
                                     </TextField>
                                 </td>
                             </tr>

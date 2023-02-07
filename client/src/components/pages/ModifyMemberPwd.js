@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -20,14 +20,16 @@ const InfoBox = styled.div`
     color: #777;
 `;
 
-export default function ModifyMemberPwd() {
+export default function ModifyMemberPwd({isLogined, userId}) {
     const navigate = useNavigate();
-    const location = useLocation();
+    // const location = useLocation();
     const [passwordChk, setPasswordChk] = useState('');
     const [newPasswordError, setNewPasswordError] = useState('');
     const [rePassworddError, setRePasswordError] = useState('');
-    const isLogined = location.state.isLogined;
-    const userId = location.state.userId;
+    // const isLogined = location.state.isLogined;
+    // const userId = location.state.userId;
+    console.log('[ModifyMemberPwd] isLogined: ',isLogined);
+    console.log('[ModifyMemberPwd] userId: ',userId);
 
     const theme = createTheme({
         palette: {

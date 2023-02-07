@@ -10,6 +10,7 @@ export default function PrivateRoute() {
     const [login, setLogin] = useState(false);
     const dispatch = useDispatch();
     const { pathname } = useLocation();
+    console.log('[PrivateRoute] pathname: ',pathname);
     const [authenticated, setAuthenticated] = useState(false);
     const [loading, setLoading] = useState(true);
 
@@ -109,6 +110,7 @@ export default function PrivateRoute() {
             return <Navigate to='/login' state={pathname} {...alert("로그인이 필요합니다.")}/>
         }else {
             if(authenticated) {
+                // if(pathname.includes('/modify/')) return <Navigate to='/memberInfo'/>
                 return <Outlet/>
             }
         }

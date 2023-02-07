@@ -57,15 +57,26 @@ export default function SignUp() {
                 } else {
                     navigate('/login');
                 }
-                
-            }else {
-                alert(res.data.message);
-                res.data.duplication === "id" ? setIdError('') : setNameError('');
             }
         })
         .catch((err) => {
             console.log(err);
-            alert('회원가입 실패');
+            switch(err.response.data.duplication) {
+                case "email" :
+                    alert(err.response.data.message);
+                    setEmailError('다른 이메일을 입력해주세요');
+                    break;
+                case "id" :
+                    alert(err.response.data.message);
+                    setIdError('다른 아이디를 입력해주세요');
+                    break;
+                case "nickname" :
+                    alert(err.response.data.message);
+                    setNameError('다른 닉네임을 입력해주세요');
+                    break;
+                default :
+                    alert('회원가입 실패');
+            }
         });
     }
     

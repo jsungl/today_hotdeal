@@ -18,7 +18,7 @@ router.post('/signUp', async(req, res) => {
     let userPwd = req.body.password;
     let userNickname = req.body.nickName;
     let userEmail = req.body.email;
-    let user = {id:false, nickname:false};
+    let user = {id:false, nickname:false, email:false};
 
     try{
         const result1 = await checkUser.chkId(userId); //아이디 중복검사
@@ -35,13 +35,22 @@ router.post('/signUp', async(req, res) => {
             user.nickname = true;
         }
 
-        if(user.id && user.nickname) { //아이디&닉네임 모두 중복되지 않으면 회원가입 성공
+        const result3 = await checkUser.chkEmail(userEmail); //이메일 중복검사
+        if(result3.length !== 0){
+            return res.status(409).json({isJoined: false, duplication: "email", message: "이미 가입되어있는 이메일입니다."});
+        }else {
+            user.email = true;
+        }
+
+
+        if(user.id && user.nickname && user.email) { //아이디&닉네임&이메일 모두 중복되지 않으면 회원가입 성공
             const hashPwd = await bcrypt.hash(userPwd, 10);
             db.query('INSERT INTO Member(user_id,user_pwd,user_nickname,user_email) VALUES(?,?,?,?)',[userId,hashPwd,userNickname,userEmail],(err,data) => {
                 if(err){
-                    console.log(err);
+                    //console.log(err);
+                    return res.status(500).json({isJoined: false});
                 }else {
-                    res.status(200).json({isJoined: true});
+                    return res.status(200).json({isJoined: true});
                 }
             });
         }
@@ -289,21 +298,47 @@ router.post('/modifyMemberInfo', async(req, res) => {
     let userNickname = req.body.nickName;
     let userEmail = req.body.email;
     let nicknameChk = false;
+    let emailChk = false;
 
     try {
         const _csrf = chkReferer(req.headers.referer);
         if(_csrf) {
-            const result = await checkUser.chkNickname(userNickname); //닉네임 중복검사
-            if(result.length !== 0){ //409는 리소스의 현재 상태와 충돌하여 요청을 완료할 수 없을 때 사용한다. 그래서 사용자가 충돌을 해결하고 요청을 다시 제출해야한다.
-                return res.status(409).json({ isModified: false, duplication:"nickname", message: "이미 사용중인 닉네임입니다" });
+
+            const userInfo = await checkUser.getUserById(userId); //아이디로 유저정보 조회
+
+            if(userInfo[0].user_nickname !== userNickname) {
+
+                const result = await checkUser.chkNickname(userNickname); //닉네임 중복검사
+                if(result.length !== 0){ //409는 리소스의 현재 상태와 충돌하여 요청을 완료할 수 없을 때 사용한다. 그래서 사용자가 충돌을 해결하고 요청을 다시 제출해야한다.
+                    return res.status(409).json({ isModified: false, duplication:"nickname", message: "이미 사용중인 닉네임입니다" });
+                }else {
+                    nicknameChk = true;
+                }
+
             }else {
                 nicknameChk = true;
             }
+            
+            
+            if(userInfo[0].user_email !== userEmail) {
 
-            if(nicknameChk) {
+                const result2 = await checkUser.chkEmail(userEmail); //이메일 중복검사
+                if(result2.length !== 0) {
+                    return res.status(409).json({ isModified: false, duplication:"email", message: "이미 가입되어있는 이메일입니다." });
+                }else {
+                    emailChk = true;
+                }
+
+            }else {
+                emailChk = true;
+            }
+
+
+            if(nicknameChk && emailChk) {
                 db.query('UPDATE Member SET user_nickname=?, user_email=? WHERE user_id=?',[userNickname,userEmail,userId],async(err,data) => {
                     if(err){
                         console.log(err);
+                        throw err;
                     }else {
                         let { accessToken,refreshToken } = await jwt.sign({ user_id:userId, user_nickname: userNickname });
                         let userInfo = { userId, userNickname };

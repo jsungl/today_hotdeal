@@ -1,6 +1,6 @@
 import { useState, useLayoutEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import Box from '@mui/material/Box';
 import Table from '@mui/material/Table';
@@ -10,13 +10,19 @@ import TableRow from '@mui/material/TableRow';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import MemberInfoHeader from '../MemberInfoHeader';
-
-
+import ModifyMemberInfo from './ModifyMemberInfo';
+import ModifyMemberPwd from './ModifyMemberPwd';
+import MemeberLeave from './MemberLeave';
 
 
 
 export default function MemberInfo() {
+    
     const navigate = useNavigate();
+    const { pathname } = useLocation();
+    console.log('[MemberInfo] pathname: ',pathname);
+    const [params] = useSearchParams();
+    const act = params.get('act');
     const isLogined = useSelector(state => state.userReducer.isLogined);
     const userId = useSelector(state => state.userReducer.userId);
     // console.log('[MemberInfo] isLogined :',isLogined);
@@ -30,6 +36,7 @@ export default function MemberInfo() {
 
     useLayoutEffect(() => {
         async function getUserInfo() {
+            console.log('[MemberInfo] 유저정보 가져오기');
             try {
                 const res = await axios.get(`${process.env.REACT_APP_URL}/user/getUserInfo`,{ params:{ userId } });
                 if(res.data.success) {
@@ -45,20 +52,40 @@ export default function MemberInfo() {
             }
         }
 
-        isLogined && getUserInfo();
+        getUserInfo();
 
-    },[isLogined,userId,navigate]);
+    },[userId,navigate,params]);
 
     const handleModifyMember = () => {
-        navigate('/modifyMemberInfo',{state: {isLogined, userInfo}});
+        //navigate('/modify/memberInfo',{state: {isLogined, userInfo}});
+        navigate({
+            pathname: '/memberInfo',
+            search: 'act=dispModifyMemberInfo',
+        });
     }
 
     const handleModifyPassword = () => {
-        navigate('/modifyMemberPassword',{state: {isLogined, userId}});
+        //navigate('/modify/memberPassword',{state: {isLogined, userId}});
+        navigate({
+            pathname: '/memberInfo',
+            search: 'act=dispModifyMemberPwd',
+        });
     }
 
     const handleLeaveMember = () => {
-        navigate('/memberLeave',{state: {isLogined, userId}});
+        //navigate('/modify/memberLeave',{state: {isLogined, userId}});
+        navigate({
+            pathname: '/memberInfo',
+            search: 'act=dispMemberLeave',
+        });
+    }
+
+    if(act === 'dispModifyMemberInfo') {
+        return <ModifyMemberInfo isLogined={isLogined} userInfo={userInfo}/>
+    }else if(act === 'dispModifyMemberPwd') {
+        return <ModifyMemberPwd isLogined={isLogined} userId={userId}/>
+    }else if(act === 'dispMemberLeave'){
+        return <MemeberLeave isLogined={isLogined} userId={userId}/>
     }
 
 

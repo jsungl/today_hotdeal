@@ -65,7 +65,7 @@ export default function Board() {
                     console.log(res);
                     setTitle(res.data[0].title);
                     setContent(res.data[0].html_content);
-                    setUser(res.data[0].user_id);
+                    setUser(res.data[0].user_nickname);
                     setDate(res.data[0].enroll_date.substring(0,10));
                     setHits(res.data[0].hits);
                     setUp(res.data[0].up);

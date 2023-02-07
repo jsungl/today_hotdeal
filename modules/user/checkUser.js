@@ -23,6 +23,17 @@ module.exports = {
             });
         });
     },
+    chkEmail: (userEmail) => {
+        return new Promise((resolve, reject) => {
+            db.query('SELECT user_email FROM Member WHERE user_email=?',[userEmail],(err,data)=>{ // 이메일 중복검사
+                if(err){
+                    reject(err);
+                }else {
+                    resolve(data);
+                }
+            });
+        });
+    },
     getUserById: (userId) => {
         return new Promise((resolve, reject) => {
             db.query('SELECT * FROM Member WHERE user_id=?',[userId],(err,data) => { //아이디로 유저정보 조회

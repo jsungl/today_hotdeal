@@ -37,7 +37,7 @@ export default function Home() {
                     {
                         no: rowData.board_no,
                         title: rowData.product_name,
-                        userId: rowData.user_id, 
+                        nickname: rowData.user_nickname, 
                         date: rowData.enroll_date.substring(0,10), 
                         hits: rowData.hits, 
                         up: rowData.up
