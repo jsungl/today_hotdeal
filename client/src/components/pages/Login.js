@@ -43,7 +43,7 @@ export default function Login() {
                 password: data.get('password'),
                 rememberMe: checked
             };
-            const res = await axios.post(`${process.env.REACT_APP_URL}/user/login`,loginData);
+            const res = await axios.post(`${process.env.REACT_APP_URL}/user/login`,loginData,{withCredentials: true});
             if(res.data.isLogined){
                 let user = res.data.userInfo;
                 //user.isLogined = true;

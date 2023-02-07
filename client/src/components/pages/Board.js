@@ -120,7 +120,7 @@ export default function Board() {
     //* 게시글 삭제
     const deletePost = async() => {
         try {
-            const s3_result = await axios.delete(process.env.REACT_APP_DELETE_S3_POST_OBJECTS,{data:{postId},withCredentials: false}); //S3 영구폴더에서 이미지 삭제
+            const s3_result = await axios.delete(process.env.REACT_APP_DELETE_S3_POST_OBJECTS,{data:{postId,userId},withCredentials: false}); //S3 영구폴더에서 이미지 삭제
             console.log(s3_result);
             if(s3_result.status === 200) {
                 const db_result = await axios.delete(`${process.env.REACT_APP_URL}/post/deletePost`,{ data: { postId, userId } });

@@ -46,7 +46,7 @@ export default function ModifyMemberInfo({isLogined, userInfo}) {
     const onhandlePost = async(data) => {
         console.log(data);
         try {
-            const res = await axios.post(`${process.env.REACT_APP_URL}/user/modifyMemberInfo`, data);
+            const res = await axios.post(`${process.env.REACT_APP_URL}/user/modifyMemberInfo`, data, {withCredentials: true});
             if(res.data.isModified){
                 alert('회원정보 변경 완료');
                 dispatch(setLogin(res.data.userInfo));
