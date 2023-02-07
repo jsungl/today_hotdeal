@@ -32,25 +32,27 @@ const BotArea = styled.div`
 
 export default function Board() {
     console.log('=========Board Component Rendering=========');
+    const navigate = useNavigate();
     const params = useParams();
     const postId = params.postId;
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [user, setUser] = useState('');
+    const [userName, setUserName] = useState('');
     const [date,setDate] = useState('');
     const [hits,setHits] = useState(0);
     const [up,setUp] = useState(0);
-    const [url, setUrl] = useState('');
-    const [mall, setMall] = useState('');
-    const [name, setName] = useState('');
-    const [price, setPrice] = useState(0);
-    const [charge, setCharge] = useState(0);
+    const [prdctUrl, setPrdctUrl] = useState('');
+    const [prdctMall, setPrdctMall] = useState('');
+    const [prdctName, setPrdctName] = useState('');
+    const [prdctPrice, setPrdctPrice] = useState(0);
+    const [dlvyChrg, setDlvyChrg] = useState(0);
     const [clickedUp, setClickedUp] = useState(false);
     const [loading, setLoading] = useState(true);
     const [open, setOpen] = useState(false);
     const userId = useSelector(state => state.userReducer.userId); //로그인한 사용자 ID
     console.log('[Board] userId: ',userId);
-    const navigate = useNavigate();
+    
 
     useLayoutEffect(() => {
         async function fetchData() {
@@ -65,15 +67,16 @@ export default function Board() {
                     console.log(res);
                     setTitle(res.data[0].title);
                     setContent(res.data[0].html_content);
-                    setUser(res.data[0].user_nickname);
+                    setUser(res.data[0].user_id);
+                    setUserName(res.data[0].user_nickname);
                     setDate(res.data[0].enroll_date.substring(0,10));
                     setHits(res.data[0].hits);
                     setUp(res.data[0].up);
-                    setUrl(res.data[0].product_url);
-                    setMall(res.data[0].product_mall);
-                    setName(res.data[0].product_name);
-                    setPrice(res.data[0].product_price);
-                    setCharge(res.data[0].delivery_charge);
+                    setPrdctUrl(res.data[0].product_url);
+                    setPrdctMall(res.data[0].product_mall);
+                    setPrdctName(res.data[0].product_name);
+                    setPrdctPrice(res.data[0].product_price);
+                    setDlvyChrg(res.data[0].delivery_charge);
                     res.data[0].up_chk === 1 && setClickedUp(true);
                     setLoading(false);
                     console.log('[Board Component] 컴포넌트 마운트');
@@ -166,7 +169,7 @@ export default function Board() {
                         </Stack>
                     </TopArea>
                     <BotArea>
-                        <div className={styles.writerDiv}>{user}</div>
+                        <div className={styles.writerDiv}>{userName}</div>
                         <div className={styles.hitsDiv}>
                             <span className={styles.span}>조회 수 <b className={styles.b}>{hits}</b></span>
                             <span className={styles.span}>추천 수 <b className={styles.b}>{up}</b></span>
@@ -179,23 +182,23 @@ export default function Board() {
                         <TableBody sx={{borderTop: "1px solid #ccc"}}>
                             <TableRow>
                                 <TableCell component="th" sx={{background:"#F6F6F6", width:100, whiteSpace: "nowrap"}}>관련 URL</TableCell>
-                                <TableCell><a href={url} target="_blank" rel="noopener noreferrer" style={{color:'#000', wordBreak: "break-all"}}>{url}</a></TableCell>
+                                <TableCell><a href={prdctUrl} target="_blank" rel="noopener noreferrer" style={{color:'#000', wordBreak: "break-all"}}>{prdctUrl}</a></TableCell>
                             </TableRow>
                             <TableRow>
                                 <TableCell component="th" sx={{background:"#F6F6F6", width:100}}>쇼핑몰</TableCell>
-                                <TableCell>{mall}</TableCell>
+                                <TableCell>{prdctMall}</TableCell>
                             </TableRow>
                             <TableRow>
                                 <TableCell component="th" sx={{background:"#F6F6F6", width:100}}>상품명</TableCell>
-                                <TableCell>{name}</TableCell>
+                                <TableCell>{prdctName}</TableCell>
                             </TableRow>
                             <TableRow>
                                 <TableCell component="th" sx={{background:"#F6F6F6", width:100}}>가격</TableCell>
-                                <TableCell>{price.toLocaleString()} 원</TableCell>
+                                <TableCell>{prdctPrice.toLocaleString()} 원</TableCell>
                             </TableRow>
                             <TableRow>
                                 <TableCell component="th" sx={{background:"#F6F6F6", width:100}}>배송비</TableCell>
-                                <TableCell>{charge === 0 ? '무료' : charge.toLocaleString() + '원'} </TableCell>
+                                <TableCell>{dlvyChrg === 0 ? '무료' : dlvyChrg.toLocaleString() + '원'} </TableCell>
                             </TableRow>
                         </TableBody>
                     </Table>
