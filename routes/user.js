@@ -6,7 +6,7 @@ const jwtConfig = require('../config/jwt');
 const jwt = require('../modules/user/jwt');
 const checkUser = require('../modules/user/checkUser');
 const manageToken = require('../modules/user/manageToken');
-const getPost = require('../modules/post/getBoardTable');
+const sqlToBoardTable = require('../modules/post/sqlToBoardTable');
 // const chkReferer = require('../modules/preventCSRF');
 // const nodeMailer = require('../modules/nodeMailer');
 const { chkReferer, nodeMailer } = require('../modules/util');
@@ -269,7 +269,7 @@ router.get('/getUserInfo',async(req,res) => {
             let userId = req.query.userId;
             if(!userId) return res.status(400).json({ message: 'UserId is undefined' });
             const data = await checkUser.getUserById(userId);
-            const post = await getPost.allByUserId(userId);
+            const post = await sqlToBoardTable.getAllByUserId(userId);
             if(data.length !== 0){
                 let userInfo = {
                     id: data[0].user_id,
@@ -395,8 +395,8 @@ router.post('/modifyMemberPwd', async(req, res) => {
     }
 });
 
-//* 회원탈퇴
-router.post('/leaveMember', async(req, res) => {
+//* 회원탈퇴 전 요청검사
+router.post('/prevLeaveMember', async(req,res) => {
     let userId = req.body.userId;
     let userPassword = req.body.password;
 
@@ -407,23 +407,42 @@ router.post('/leaveMember', async(req, res) => {
             if(data.length !== 0){ 
                 const match = await bcrypt.compare(userPassword, data[0].user_pwd);
                 if(match) {
-                    db.query('DELETE FROM Member WHERE user_id=?',[userId],(err,data) => {
-                        if(err){
-                            console.log(err);
-                        }else {
-                            delAllCookies(req,res); //쿠키삭제
-                            return res.status(200).json({ result: true });
-                        }
-                    });
-
+                    return res.status(200).json({ result: true });
                 }else {
                     //비밀번호 불일치 
                     return res.status(400).json({ result: false, message:'비밀번호가 일치하지 않습니다.' });
                 }
             }
         }else {
-            res.status(301).json({ redirectUrl: '/' });
+            return res.status(301).json({ redirectUrl: '/' });
         }
+    }catch(err) {
+        console.log('POST /user/prevLeaveMember :',err);
+    }
+
+})
+
+//* 회원탈퇴
+router.post('/leaveMember', async(req, res) => {
+    let userId = req.body.userId;
+
+    try {
+        const _csrf = chkReferer(req.headers.referer);
+        if(_csrf) {
+            db.query('DELETE FROM Member WHERE user_id=?',[userId],(err,data) => {
+                if(err){
+                    console.log(err);
+                    throw err;
+                }else {
+                    delAllCookies(req,res); //쿠키삭제
+                    return res.status(200).json({ result: true });
+                }
+            });
+
+        }else {
+            return res.status(301).json({ redirectUrl: '/' });
+        }
+        
     }catch(err) {
         console.log('POST /user/leaveMember :',err);
     }
@@ -445,8 +464,7 @@ router.post('/findAccount', async(req, res) => {
         if(userMail) {
             const data = await checkUser.getUserByEmail(userMail);
             if(data.length !== 0) {
-                //let token = await createToken();
-                let token = '+Hmz5BNPT07oRdtIp9/IZom2HHM=';
+                let token = await createToken();
                 console.log(token);
                 const createTokenResult = await manageToken.createAuthToken(data[0].user_id,token);
                 if(createTokenResult) {
