@@ -52,9 +52,9 @@ export default function MemberInfo() {
             }
         }
 
-        getUserInfo();
+        isLogined && getUserInfo();
 
-    },[userId,navigate,params]);
+    },[isLogined,userId,navigate,params]);
 
     const handleModifyMember = () => {
         //navigate('/modify/memberInfo',{state: {isLogined, userInfo}});
