@@ -52,11 +52,6 @@ export default function BoardWrite() {
     //* unload 이벤트시 임시폴더 삭제
     const deleteFolder = useCallback((e) => {
         console.log('unload event :: ',e);
-        // if(post.flag){
-        //     axios.delete(process.env.REACT_APP_DELETE_S3_OBJECTS,{data:{userId:userName}})
-        //     .then(res=>console.log(res))
-        //     .catch(err=>console.error(err));
-        // }
     },[]);
 
     useEffect(() => {
@@ -91,10 +86,6 @@ export default function BoardWrite() {
         }
     }, [success, navigate, dispatch]);
 
-    // const getTitle = (e) => {
-    //     const { value } = e.target;
-    //     dispatch({type:'TITLE_CHANGE',title:value});
-    // }
 
     //* url 유효성 검사
     const checkUrl = (postUrl) => {
@@ -114,40 +105,52 @@ export default function BoardWrite() {
         return textContent;
     }
 
-    //* 게시글 업로드
+    //* Board 테이블에 있는 게시물 삭제
+    const deletePost = async(userId,postId) => {
+        try {
+            let res = await axios.delete(`${process.env.REACT_APP_URL}/post/deletePost`,{ data:{ userId, postId}});
+            res.data.result && console.log('삭제확인');
+        }catch(err) {
+            console.log(err);
+        }
+    }
+
+    //* 게시물 업로드
     const uploadPost = async(userId,postId) => {
-        await axios.put(process.env.REACT_APP_MOVE_S3_OBJECTS,{userId,postId,uploadList:imageUpload.list}) //응답으로 경로가 포함된 이미지 이름 배열을 받는다
-        .then(async (res) => {
-            if(res.status === 200){
-                console.log('[BoardWrite] S3moveObject 람다함수로부터 응답결과 ::',res);
+
+        try {
+            const result = await axios.put(process.env.REACT_APP_MOVE_S3_OBJECTS,{userId,postId,uploadList:imageUpload.list}); //응답으로 경로가 포함된 이미지 이름 배열을 받는다
+            if(result.status === 200){
+                console.log('[BoardWrite] S3moveObject 람다함수로부터 응답결과 ::',result);
                 const temp = []; //경로에서 이름만 잘라 저장할 임시배열
                 //FIXME: push 사용하지 말것!
-                res.data.map(data=>temp.push(data.split("/").slice(-1)[0]));
+                result.data.map(data=>temp.push(data.split("/").slice(-1)[0]));
                 console.log('[BoardWrite] 영구폴더로 업로드한 이미지 파일 ::',temp);                
                 let data = JSON.stringify(temp);
-                await axios.post(`${process.env.REACT_APP_URL}/post/updateImagePath`,{
+                const result2 = await axios.post(`${process.env.REACT_APP_URL}/post/updateImagePath`,{
                     userId,
                     postId,
                     data
-                }).then((res) => {
+                });
+                if(result2.data.updated) {
                     alert('upload success!');
                     dispatch(setAsyncSuccess()); //요청성공
-                    //navigate('/list',{replace:true});
-                })
-                .catch(err => {
-                    console.log('[BoardWrite] DB 이미지 경로 바꾸기 요청 오류',err);
-                    alert('update image path fail!');
-                });
-            } 
-        })
-        .catch(err => {
-            console.log('[BoardWrite] 영구폴더 이동 람다함수 실행 오류 ::',err);
+                }
+            }
+
+        }catch(err) {
+            console.log(err);
+            if(err.response.status === 500) { //람다함수 실행오류 or DB 이미지 경로 변경 오류
+                console.log('[BoardWrite] 게시물 업로드 요청 오류 ',err.response.data.message);
+                deletePost(userId,postId);
+            }
             alert('upload fail!');
             dispatch(setAsyncError()); //요청 실패
-        }); 
+
+        }
     }
 
-    //* 게시글 등록시 업로드 전 폼으로부터 데이터 추출 및 유효성 검사
+    //* 게시물 등록시 업로드 전 폼으로부터 데이터 추출 및 유효성 검사
     const handleSubmit = async(e) => {
         try {
             e.preventDefault();

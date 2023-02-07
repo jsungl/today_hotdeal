@@ -18,13 +18,6 @@ import { setAsync, setAsyncSuccess, setAsyncError, setAsyncInit } from '../../mo
 import { setPostInit } from '../../modules/posts';
 
 
-const theme = createTheme({
-    palette: {
-      primary: {
-        main: '#337ab7',
-      },
-    },
-});
 
 export default function BoardUpdate() {
     console.log('=========BoardUpdate Component Rendering=========');
@@ -56,6 +49,14 @@ export default function BoardUpdate() {
        paddingRight:'10px'
     }
 
+    const theme = createTheme({
+        palette: {
+          primary: {
+            main: '#337ab7',
+          },
+        },
+    });
+
     //* beforeunload 이벤트시 경고창 표시
     const preventClose = useCallback((e) => {
         e.preventDefault();
@@ -73,16 +74,16 @@ export default function BoardUpdate() {
     },[]);
 
     useEffect(() => {
-        console.log('[BoardUpdate Component] 컴포넌트 마운트');
+        console.log('[BoardUpdate] 컴포넌트 마운트');
         window.addEventListener('beforeunload',preventClose);
         window.addEventListener('unload',deleteFolder);
 
         return async() => {
-            console.log('[BoardUpdate Component] 컴포넌트 언마운트');
+            console.log('[BoardUpdate] 컴포넌트 언마운트');
             window.removeEventListener('beforeunload',preventClose);
             window.removeEventListener('unload',deleteFolder);
-            console.log('[BoardUpdate Component] 언마운트 flag ::',store.getState().postReducer.flag);
-            console.log('[BoardUpdate Component] 언마운트 userId ::',user);
+            console.log('[BoardUpdate] 언마운트 flag ::',store.getState().postReducer.flag);
+            console.log('[BoardUpdate] 언마운트 userId ::',user);
             if(store.getState().postReducer.flag){
                 try {
                     const res = await axios.delete(process.env.REACT_APP_DELETE_S3_TEMP_OBJECTS,{data:{userId:user}});
@@ -114,7 +115,7 @@ export default function BoardUpdate() {
                 setPrice(res.data.boardInfo[0].product_price);
                 setCharge(res.data.boardInfo[0].delivery_charge);
                 setOriginImg(res.data.imageNames);
-                console.log('[BoardUpdate Component] 게시글 가져오기');
+                console.log('[BoardUpdate] 게시글 가져오기');
             })
             .catch(e => {
                 console.error(e.message);
@@ -155,7 +156,6 @@ export default function BoardUpdate() {
                         let temp = [];
                         //FIXME: push 사용하지 말것!
                         moveResult.data.map(data=>temp.push(data.split("/").slice(-1)[0]));
-                        //console.log('[BoardUpdate Component] 삭제하기전 temp ::',temp);
                         //FIXME: push 사용하지 말것!
                         imgNamesArr.originList.push(...temp);
                         deleteS3Image(postId);
@@ -163,12 +163,12 @@ export default function BoardUpdate() {
                         let temp = []; //경로에서 이름만 잘라 저장할 임시배열
                         //FIXME: push 사용하지 말것!
                         moveResult.data.map(data=>temp.push(data.split("/").slice(-1)[0]));
-                        console.log('[BoardUpdate Component] 새로 추가한 이미지 ::',temp);
+                        console.log('[BoardUpdate] 새로 추가한 이미지 ::',temp);
                         let data = JSON.stringify(temp); //문자열로 변환
                         let files = imgNamesArr.originList.length === 0 ? data : JSON.stringify(imgNamesArr.originList.concat(...temp)); //업데이트 할 이미지 이름 문자열(추가한 이미지 포함)
 
                         //이미지만 추가하여 수정한 경우
-                        await axios.put(`${process.env.REACT_APP_URL}/updateImageNames`,{ 
+                        await axios.put(`${process.env.REACT_APP_URL}/post/updateImageNames`,{ 
                             postId,
                             files
                         });
@@ -179,7 +179,7 @@ export default function BoardUpdate() {
                 }
             }
         }catch(err) {
-            console.log('[BoardUpdate Component] 게시글 수정 업로드 실패 ::',err);
+            console.log('[BoardUpdate] 게시물 수정 업로드 실패 ::',err);
             alert('Update Fail!');
             dispatch(setAsyncError()); //요청 실패
         }
@@ -188,8 +188,8 @@ export default function BoardUpdate() {
     //*게시글 수정시 삭제한 이미지가 있으면 S3 영구폴더에서 해당 이미지 삭제 
     const deleteS3Image = async(postId) => {
         try{
-            console.log('[BoardUpdate Component] 삭제한 파일 ::',imgNamesArr.deletedList);
-            const deleteResult = await axios.delete(process.env.REACT_APP_DELETE_S3_POST_OBJECTS,{data:{postId,files:imgNamesArr.deletedList}});
+            console.log('[BoardUpdate] 삭제한 파일 ',imgNamesArr.deletedList);
+            const deleteResult = await axios.delete(process.env.REACT_APP_DELETE_S3_POST_OBJECTS,{data:{postId,userId:user,files:imgNamesArr.deletedList}});
             if(deleteResult.status === 200){ 
                 //console.log(deleteResult);
                 //console.log('[BoardUpdate Component] 삭제하기전 originList ::',imgNamesArr.originList);
@@ -200,10 +200,10 @@ export default function BoardUpdate() {
                     postId,
                     files
                 });
-                console.log('[BoardUpdate Component] 이미지 삭제 요청 ::',result.data.updated);
+                console.log('[BoardUpdate] 이미지 삭제 요청 ::',result.data.updated);
             }
         }catch(err){
-            console.log('[BoardUpdate Component] 이미지 삭제 요청 실패 ::',err);
+            console.log('[BoardUpdate] 이미지 삭제 요청 실패 ::',err);
             dispatch(setAsyncError()); //요청 실패
         }
     }
@@ -226,18 +226,17 @@ export default function BoardUpdate() {
                 const figureReg = /(<figure[^>]*>)/gi; //figure 태그 찾는 정규식
                 let htmlContent = content;
 
-                console.log('[BoardUpdate Component] DB에 저장되어 있는 기존 이미지 ::',originImg);
+                console.log('[BoardUpdate] DB에 저장되어 있는 기존 이미지 ',originImg);
                 if(originImg){ //기존에 저장되어있는 이미지가 있는 경우(null이 아닌경우)
                     imgNamesArr.originList = JSON.parse(originImg); //배열로 변환
-                    console.log('[BoardUpdate Component] DB에 저장되어 있는 이미지 배열로 변환 ::',imgNamesArr.originList);
+                    console.log('[BoardUpdate] DB에 저장되어 있는 이미지 배열로 변환 ',imgNamesArr.originList);
                 }else{
                     //originImg = null인 경우
-                    console.log('[BoardUpdate Component] DB에 저장되어 있는 기존 이미지 없음!',originImg);
+                    console.log('[BoardUpdate] DB에 저장되어 있는 기존 이미지 없음!',originImg);
                 }
 
                 if(imgSrcReg.test(htmlContent)){ //본문에 이미지가 있는지 확인
                     if(htmlContent.includes('/temp/')) { //이미지 경로에서 temp가 있는지 찾는다 -> 복붙한 이미지인지 업로드한 이미지인지 확인
-                        console.log('[BoardUpdate Component] 이미지 경로에 temp가 있는 경우 flag ::',imageUpload.flag);
                         imageUpload.flag = true;
                         dispatch(setAsync()); //요청시작
                     }
@@ -249,7 +248,7 @@ export default function BoardUpdate() {
                           const stylesData = styles[0];
                           const temp = data.replace(stylesData,"text-align:center;margin:auto;"+stylesData);
                           htmlContent = htmlContent.replaceAll(data, temp);
-                        } else {
+                        }else {
                           const temp2 = data.replaceAll(
                             '<figure',
                             '<figure style="text-align:center;margin:auto;"'
@@ -266,7 +265,8 @@ export default function BoardUpdate() {
                     let copyImgNames = [...imgNamesArr.originList]; 
 
                     htmlContent.match(imgSrcReg).map((data)=>{
-                        if(data.includes('/posts/')){
+                        //if(data.includes('/posts/')){
+                        if(data.includes(`/posts/${user}`)) {
                             //해당 이미지가 db에 저장되어 있는지 검사
                             //originImgNames가 null이 아니면 -> 기존에 저장되어 있는 이미지가 있다
                             for(var i=0; i<copyImgNames.length;i++){
@@ -277,9 +277,9 @@ export default function BoardUpdate() {
                                     break;
                                 }
                             }
-                        }else{
+                        }else {
                              //게시글에 있는 업로드한 이미지 파일 이름을 배열에 추가
-                            if (data.includes('/temp/')) {
+                            if (data.includes(`/temp/${user}`)) {
                                 let sources = data.match(/<img [^>]*src="[^"]*"[^>]*>/gm).map(x => x.replace(/.*src="([^"]*)".*/, '$1'));
                                 let fileName = sources[0].replace(/^.*\//, '');
                                 //FIXME: push 사용하지 말것!
@@ -288,13 +288,15 @@ export default function BoardUpdate() {
                         }
                         return htmlContent; //map함수 반환을 변수에 정의하는것이 아니므로 의미없는 리턴값임
                     });
-                    console.log('[BoardUpdate Component] 삭제한 이미지 파일 ::',copyImgNames); //삭제하지 않았으면 빈 배열
+                    console.log('[BoardUpdate] 삭제한 이미지 파일 ',copyImgNames); //삭제하지 않았으면 빈 배열
+                    console.log('[BoardUpdate] 새로 업로드한 이미지 파일2 ',imgNamesArr.uploadList); 
+
                     if(copyImgNames.length !== 0) imgNamesArr.deletedList = [...copyImgNames];
 
                 }else {
                     // 글만 있는경우 or 이미지를 모두 삭제한 경우
                     if(imgNamesArr.originList.length !== 0){ //이미지를 모두 삭제한 경우
-                        console.log('[BoardUpdate Component] 삭제한 이미지 파일 ::',imgNamesArr.originList);
+                        console.log('[BoardUpdate] 삭제한 이미지 파일 ',imgNamesArr.originList);
                         imgNamesArr.deletedList = [...imgNamesArr.originList];
                     }
                 }
@@ -310,11 +312,11 @@ export default function BoardUpdate() {
                 const {productName,productPrice,deliveryCharge} = updateData;
                 const fee = Number(deliveryCharge) === 0 ? '무료' : deliveryCharge + '원'; //배송비 0원 일 경우 무료로 설정
                 updateData.postTitle = `[${mall}] ${productName} (${productPrice}원) (${fee})`; //게시글 제목 : "[쇼핑몰] 상품이름 (상품가격) (배송비)"
-                console.log('[BoardUpdate Component] updateData ::',updateData);
+                console.log('[BoardUpdate] updateData ',updateData);
             
-                const result = await axios.put(`${process.env.REACT_APP_URL}/updatePost`,updateData); //업데이트 폼 전송
+                const result = await axios.put(`${process.env.REACT_APP_URL}/post/updatePost`,updateData); //업데이트 폼 전송
                 if(result.data.updated){
-                    console.log('[BoardUpdate Component] 본문에 이미지 있는지 확인 ::',imageUpload.flag);
+                    console.log('[BoardUpdate] 본문에 이미지 있는지 확인: ',imageUpload.flag);
                     if(imageUpload.flag) {
                         //이미지 업로드한 경우 or 삭제와 업로드 둘다 한 경우
                         updatePost(user,postId); //사용자ID와 게시글 Number 
@@ -329,7 +331,7 @@ export default function BoardUpdate() {
                     }
 
                 }else { //업데이트 실패
-                    console.log('[BoardUpdate Component] 업데이트 폼 전송 실패');
+                    console.log('[BoardUpdate] 업데이트 폼 전송 실패');
                     alert('Update Fail!');
                     dispatch(setAsyncError());
                 }
