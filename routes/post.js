@@ -1,8 +1,8 @@
 const express = require('express');
 const db = require('../config/db');
-const getPost = require('../modules/post/getBoardTable');
-const updatePost = require('../modules/post/updateBoardTable');
-const getImage = require('../modules/post/getImageTable');
+const sqlToBoardTable = require('../modules/post/sqlToBoardTable');
+const sqlToImageTable = require('../modules/post/sqlToImageTable');
+const checkUser = require('../modules/user/checkUser');
 const router = express.Router();
 
 //* 데이터 총 개수, 1번째 페이지(0~10) 데이터 조회 -> Home 컴포넌트
@@ -86,7 +86,7 @@ router.get('/getBoardContent',async(req, res) => {
     try {
         let postId = req.query.postId;
         let userId = req.query.userId;
-        let userInfo = req.cookies['user'];
+        //let userInfo = req.cookies['user'];
         //console.log('userInfo: ',userInfo);
         let myIp = getUserIP(req);
 
@@ -96,7 +96,7 @@ router.get('/getBoardContent',async(req, res) => {
                 // 유효시간 1일    
                 maxAge: 1000 * 60 * 60 * 24
             });
-            await updatePost.increaseView(postId);
+            await sqlToBoardTable.increaseView(postId);
         }else{
             if(!req.cookies[myIp].includes(postId)) {
                 let oldValue = req.cookies[myIp];
@@ -104,19 +104,19 @@ router.get('/getBoardContent',async(req, res) => {
                 res.cookie(myIp,newValue,{
                     maxAge: 1000 * 60 * 60 * 24
                 });
-                await updatePost.increaseView(postId);
+                await sqlToBoardTable.increaseView(postId);
             }
         }
         
         if(userId) { //로그인한 경우
-            let data = await getPost.allByPostIdOnLogin(postId,userId);
+            let data = await sqlToBoardTable.getAllByPostIdOnLogin(postId,userId);
             if(data.length === 0) {
                 return res.status(404).json({message:'게시물이 존재하지 않습니다.'}); //410도 맞을것같다
             }else {
                 return res.send(data);
             }
         }else { //비로그인
-            let data = await getPost.allByPostId(postId);
+            let data = await sqlToBoardTable.getAllByPostId(postId);
             if(data.length === 0) {
                 return res.status(404).json({message:'게시물이 존재하지 않습니다.'}); //410도 맞을것같다
             }else {
@@ -131,7 +131,7 @@ router.get('/getBoardContent',async(req, res) => {
 });
 
 //* 게시물 등록
-router.post('/uploadPost',(req,res) => {
+router.post('/uploadPost',async(req,res) => {
     let title = req.body.postTitle;
     let category = req.body.postCategory;
     let url = req.body.postUrl;
@@ -143,14 +143,18 @@ router.post('/uploadPost',(req,res) => {
     let textContent = req.body.textContent;
     let htmlContent = req.body.htmlContent;
 
-    db.query('INSERT INTO Board(title,html_content,text_content,user_id,category,product_url,product_mall,product_name,product_price,delivery_charge) VALUES (?,?,?,?,?,?,?,?,?,?)',
-        [title,htmlContent,textContent,userId,category,url,mall,name,price,dc],(err,data) => {
+    const data = await checkUser.getUserById(userId);
+    const nickname = data[0].user_nickname;
+
+
+    db.query('INSERT INTO Board(title,html_content,text_content,user_nickname,category,product_url,product_mall,product_name,product_price,delivery_charge,user_id) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+        [title,htmlContent,textContent,nickname,category,url,mall,name,price,dc,userId],(err,data) => {
             if (err) {
                 console.log('/uploadPost error :: ',err);
                 res.status(500).json({uploaded: false, error: {message:'Upload Fail!'}});
             } else{
                 const postId = data.insertId;
-                console.log("/uploadPost postId ::",postId);
+                console.log("/uploadPost postId: ",postId);
                 res.status(200).json({uploaded: true, message:'Upload Success!',postId});
             }
         }
@@ -159,41 +163,31 @@ router.post('/uploadPost',(req,res) => {
 });
 
 //* 게시물 이미지 경로 변경(임시폴더->영구폴더)
-router.post('/updateImagePath',(req,res) => {
-    let userId = req.body.userId;
-    let postId = req.body.postId;
-    let uploadImgNames = req.body.data;
-    console.log('/updateImagePath 업로드한 이미지 ::',uploadImgNames);
+router.post('/updateImagePath',async(req,res) => {
+    try {
+        let userId = req.body.userId;
+        let postId = req.body.postId;
+        let uploadImgNames = req.body.data;
+        console.log('/updateImagePath 업로드한 이미지: ',uploadImgNames);
     
-    db.query('SELECT html_content,title FROM Board WHERE board_no=?',[postId],(err,data) => {
-        if (err) {
-            res.status(500).json({ error: err});
-        } else{
-            //console.log('data ::',data);
+        const data = await sqlToBoardTable.getAllByPostId(postId);
+        if(data !== 0) {
             const content = data[0].html_content;
             const title = data[0].title;
-            const newContent = content.replaceAll(`temp/${userId}`,`posts/${postId}`);
-            db.query('UPDATE Board SET html_content=? WHERE board_no=?',[newContent,postId],(err,data) => {
-                if(err) {
-                    console.log('Image path Update Error ::',err);
-                    res.status(500).json({updated:false, error:{message:'Image path Update Fail!'}});
-                } else {
-                    if(uploadImgNames){
-                        db.query('INSERT INTO Image(board_no,title,file_name) VALUES(?,?,?)',[postId,title,uploadImgNames],(err,data) => {
-                            if(err){
-                                console.log('Image Table Upload Error ::',err);
-                                res.status(500).json({updated:false, error:{message:'Image Table Upload Fail!'}});
-                            }else{
-                                res.status(200).json({updated:true, message:'Image path Update & Image Table Upload Success!'});
-                            }
-                        });
-                    }else{
-                        res.status(200).json({updated:true, message:'Image path Update Success!'});
-                    }
-                }
-            });
+            const newContent = content.replaceAll(`temp/${userId}`,`posts/${userId}/${postId}`);
+            await sqlToBoardTable.updateHtmlContent(newContent,postId);
+            if(uploadImgNames){
+                let success = await sqlToImageTable.addImageName(postId,title,uploadImgNames);
+                if(success) return res.status(200).json({updated:true, message:'Image path Update & Image Upload to Table Success!'});
+            }else {
+                return res.status(200).json({updated:true, message:'Image path Update Success!'});
+            }
         }
-    });
+
+    }catch(err) {
+        console.log('/POST updateImagePath ',err);
+        res.status(500).json({updated:false, message:'이미지 경로 변경 or 이미지 테이블 업로드 실패'});
+    }
 });
 
 //* 게시물 수정
@@ -222,10 +216,9 @@ router.put('/updatePost',(req,res) => {
 router.get('/getBoardInfo',async(req, res) => {
     try {
         let postId = req.query.postId;
-        let data = await getPost.allByPostId(postId);
+        let data = await sqlToBoardTable.getAllByPostId(postId);
         const boardInfo = data;
-        let data2 = await getImage.fileNameByPostId(postId);
-        console.log("/getBoardInfo 이미지 파일 ::",data2);
+        let data2 = await sqlToImageTable.getFileNameByPostId(postId);
         res.status(200).json({boardInfo,imageNames:data2[0] === undefined ? null : data2[0].file_name});
 
     }catch(err) {
@@ -241,11 +234,10 @@ router.put('/updateImageNames',async(req,res) => {
         const updatedImgNames = req.body.files;
         console.log('수정시 업로드한 이미지 :',updatedImgNames);
 
-        const data = await getImage.allByPostId(postId);
-        console.log('게시물번호로 조회한 데이터 :',data);
+        const data = await sqlToImageTable.getAllByPostId(postId);
         if(data[0] === undefined){ //DB에 저장된 이미지가 없는 게시글인 경우
             console.log('Image 테이블에 저장된 이미지가 없음');
-            let title = await getPost.titleByPostId(postId);
+            let title = await sqlToBoardTable.getTitleByPostId(postId);
             db.query('INSERT INTO Image(board_no,title,file_name) VALUES(?,?,?)',[postId,title,updatedImgNames],(err,data) => {
                 if(err){
                     console.log(err);
