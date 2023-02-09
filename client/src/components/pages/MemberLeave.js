@@ -44,8 +44,7 @@ export default function MemberLeave({isLogined, userId}) {
         try {
             const prevResult = await axios.post(`${process.env.REACT_APP_URL}/user/prevLeaveMember`, data, {withCredentials: true});
             if(prevResult.data.result) {
-                const deleteResult = await axios.delete(process.env.REACT_APP_DELETE_S3_POST_OBJECTS,{data:{userId}}); //S3 영구폴더에서 이미지 삭제
-                console.log(deleteResult);
+                const deleteResult = await axios.delete(process.env.REACT_APP_DELETE_S3_POST_OBJECTS,{data:{userId}}); //S3 영구폴더에서 해당 유저 폴더 삭제
                 if(deleteResult.status === 200) {
                     const res = await axios.post(`${process.env.REACT_APP_URL}/user/leaveMember`, data, {withCredentials: true});
                     if(res.data.result){
@@ -63,8 +62,8 @@ export default function MemberLeave({isLogined, userId}) {
             console.log(err);
             if(err.response.status === 301) {
                 navigate('/',{ replace: true });
-            }else if(err.response.status === 500) {
-                console.log('람다함수 실행 오류');
+            }else if(err.response.status === 500) { //람다함수 실행 오류
+                alert('Internal Server Error');
             }else {
                 alert(err.response.data.message);
                 !err.response.data.result && setPasswordChk('비밀번호를 다시 입력해주세요.');
@@ -82,7 +81,7 @@ export default function MemberLeave({isLogined, userId}) {
         };
         if(isLogined) {
             if (window.confirm('정말 탈퇴하시겠습니까?')) {
-                //onConfirm(result);
+                onConfirm(result);
                 setLoading(true);
             }else {
                 return;

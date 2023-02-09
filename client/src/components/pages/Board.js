@@ -51,7 +51,6 @@ export default function Board() {
     const [loading, setLoading] = useState(true);
     const [open, setOpen] = useState(false);
     const userId = useSelector(state => state.userReducer.userId); //로그인한 사용자 ID
-    console.log('[Board] userId: ',userId);
     
 
     useLayoutEffect(() => {
@@ -65,7 +64,6 @@ export default function Board() {
                     withCredentials: true
                 })
                 .then((res) => {
-                    console.log(res);
                     setTitle(res.data[0].title);
                     setContent(res.data[0].html_content);
                     setUser(res.data[0].user_id);
@@ -84,7 +82,7 @@ export default function Board() {
                 })
                 .catch((err) => {
                     console.error(err);
-                    if(err.response.status === 404) {
+                    if(err.response.status === 404) { //게시물이 존재하지 않는 경우
                         alert(err.response.data.message);
                         navigate('/');
                     }
@@ -93,7 +91,7 @@ export default function Board() {
         fetchData();
     },[postId,userId,navigate]);
 
-    //* 게시글 추천
+    //* 게시물 추천
     const handleUpBtn = async() => {
         try {
             if(!clickedUp) {
@@ -105,23 +103,25 @@ export default function Board() {
             }else {
                 const res = await axios.delete(`${process.env.REACT_APP_URL}/post/decreaseUp`,{ data: { postId, userId } });
                 if(res.data.result) {
+                    alert(res.data.message);
                     setClickedUp(false);
                 }
             }
 
         }catch(err) {
-            console.log(err);
-            if(err.response.status === 500 || err.response.status === 400) {
-                alert(err.response.data.message);
+            console.error(err.response.message);
+            if(err.response.status === 500) {
+                alert('Internal Server Error');
+            }else if(err.response.status === 400) {
+                alert(err.response.message);
             }
         }
     }
 
-    //* 게시글 삭제
+    //* 게시물 삭제
     const deletePost = async() => {
         try {
-            const s3_result = await axios.delete(process.env.REACT_APP_DELETE_S3_POST_OBJECTS,{data:{postId,userId},withCredentials: false}); //S3 영구폴더에서 이미지 삭제
-            console.log(s3_result);
+            const s3_result = await axios.delete(process.env.REACT_APP_DELETE_S3_POST_OBJECTS,{data:{postId,userId}}); //S3 영구폴더에서 해당 게시물 이미지 삭제
             if(s3_result.status === 200) {
                 const db_result = await axios.delete(`${process.env.REACT_APP_URL}/post/deletePost`,{ data: { postId, userId } });
                 if(db_result.data.result) {
@@ -129,14 +129,19 @@ export default function Board() {
                 }
             }
         }catch(err) {
-            console.log(err);
+            console.error(err.response.message);
             setOpen(false);
+            if(err.response.status === 500) {
+                alert('Internal Server Error');
+            }else if(err.response.status === 400) {
+                alert(err.response.message);
+            }
         }
 
     }
 
     const handleDeleteBtn = () => {
-        if (window.confirm('게시글을 삭제하시겠습니까?')) {
+        if (window.confirm('게시물을 삭제하시겠습니까?')) {
             deletePost();
             setOpen(true);
         }else {

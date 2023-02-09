@@ -125,7 +125,7 @@ router.get('/getBoardContent',async(req, res) => {
         }
 
     }catch(err) {
-        console.log(err);
+        console.log('/GET getBoardContent ',err);
         //res.send(err);
     }
 });
@@ -272,13 +272,13 @@ router.post('/increaseUp',(req,res) => {
         db.query('INSERT INTO Up(user_id,board_no) VALUES(?,?)',[userId,postId],(err,data) => {
             if(err){
                 console.log('/POST increaseUp ',err);
-                res.status(500).json({result: false, message:'추천에 실패하였습니다.'});
+                res.status(500).json({message: err.code});
             }else{
-                res.status(200).json({result: true, message:'게시물 추천하였습니다!'});
+                res.status(200).json({result: true, message:'추천하였습니다'});
             }
         });
     }else {
-        res.status(400).json({result: false, message:'추천에 실패하였습니다.'});
+        res.status(400).json({message: 'userId invalid or postId invalid'});
     }
 });
 
@@ -291,13 +291,13 @@ router.delete('/decreaseUp',(req,res) => {
         db.query('DELETE FROM Up WHERE user_id=? AND board_no=?',[userId,postId],(err,data) => {
             if(err){
                 console.log('/DELETE decreaseUp ',err);
-                res.status(500).json({result: false});
+                res.status(500).json({message: err.code});
             }else{
-                res.status(200).json({result: true});
+                res.status(200).json({result: true, message:'추천을 취소하였습니다'});
             }
         });
     }else {
-        res.status(400).json({result: false});
+        res.status(400).json({message: 'userId invalid or postId invalid'});
     }
     
 });
@@ -311,13 +311,13 @@ router.delete('/deletePost',(req,res) => {
         db.query('DELETE FROM Board WHERE user_id=? AND board_no=?',[userId,postId],(err,data) => {
             if(err){
                 console.log('/DELETE deletePost ',err);
-                res.status(500).json({result: false});
+                res.status(500).json({message: err.code});
             }else{
                 res.status(200).json({result: true});
             }
         });
     }else {
-        res.status(400).json({result: false});
+        res.status(400).json({message: 'userId invalid or postId invalid'});
     } 
 });
 
