@@ -27,8 +27,6 @@ export default function Login() {
     const [checked, setChecked] = useState(false);
     const { state } = useLocation();
 
-    //TODO: Remember me 처리할 것.
-
     useEffect(() => {
         const expired = params.get('expired');
         if(expired !== null && expired === '') alert('세션이 만료되었습니다. 다시 로그인해주세요.');
@@ -53,19 +51,18 @@ export default function Login() {
                 //axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
 
                 dispatch(setLogin(user)); //store에 유저정보 저장
-                //TODO: 이전에 보던 페이지로 이동시키기
                 if (state) {
                     console.log('[Login] 이전에 보던 페이지 ',state);
                     navigate(state);
                 } else {
                     navigate('/');
                 }
-            }else {
-                alert(res.data.message); //로그인 실패 이유 메시지 출력
             }
+
         }catch(err) {
-            console.log(err);
-            alert('로그인 실패');
+            console.error(err.response.data.message);
+            if(err.response.status === 400) alert(err.response.data.message); //로그인 실패 이유 메시지 출력
+            else alert('로그인 실패');
         }
     }
 

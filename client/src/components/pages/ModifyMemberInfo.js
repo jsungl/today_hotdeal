@@ -54,17 +54,18 @@ export default function ModifyMemberInfo({isLogined, userInfo}) {
             }
 
         }catch(err) {
+            console.error(err.response.data.message);
             if(err.response.status === 409) {
                 alert(err.response.data.message);
                 err.response.data.duplication === 'nickname' ? setNameError('다른 닉네임을 입력해주세요.') : setEmailError('다른 이메일을 입력해주세요.')
             }else if(err.response.status === 301) {
                 navigate('/',{ replace: true });
             }else {
-                console.log(err);
-                alert('회원정보 변경 실패');
+                alert('회원정보 변경에 실패했습니다');
             }
         }
     }
+
 
     const modifyMemberInfo = (e) => {
         e.preventDefault();
@@ -74,13 +75,11 @@ export default function ModifyMemberInfo({isLogined, userInfo}) {
             nickName: data.get('nickName'),
             email: data.get('email')
         };
-        const { nickName, email } = modifiedData;
         
-
-        if(userInfo.nickname === nickName && userInfo.email === email) {
+        const { nickName, email } = modifiedData;
+        if(userInfo.nickname === nickName && userInfo.email === email) { //변경사항이 없는경우
             alert('회원정보 변경 완료');
             navigate('/memberInfo',{replace:true});
-        
         }
             
         // 닉네임 유효성 검사
@@ -101,6 +100,7 @@ export default function ModifyMemberInfo({isLogined, userInfo}) {
         ) {
             onhandlePost(modifiedData);
         }
+        
     }
 
     return(

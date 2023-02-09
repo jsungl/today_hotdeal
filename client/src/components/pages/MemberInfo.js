@@ -46,9 +46,10 @@ export default function MemberInfo() {
                     setJoinDate(res.data.userInfo.joinDate.substring(0,10));
                     setPost(res.data.post);
                 }
+
             }catch(err) {
-                console.log(err);
-                err.response.status === 301 ? navigate('/',{ replace: true }) : console.log(err.response.data.message);
+                console.error(err.response.data.message);
+                if(err.response.status === 301) navigate('/',{ replace: true });
             }
         }
 

@@ -42,13 +42,13 @@ export default function MemberLeave({isLogined, userId}) {
 
     const onConfirm = async(data) => {
         try {
-            const prevResult = await axios.post(`${process.env.REACT_APP_URL}/user/prevLeaveMember`, data, {withCredentials: true});
+            const prevResult = await axios.post(`${process.env.REACT_APP_URL}/user/prevLeaveMember`, data, {withCredentials: true}); //탈퇴하기전 비밀번호 검증
             if(prevResult.data.result) {
                 const deleteResult = await axios.delete(process.env.REACT_APP_DELETE_S3_POST_OBJECTS,{data:{userId}}); //S3 영구폴더에서 해당 유저 폴더 삭제
                 if(deleteResult.status === 200) {
                     const res = await axios.post(`${process.env.REACT_APP_URL}/user/leaveMember`, data, {withCredentials: true});
                     if(res.data.result){
-                        alert('탈퇴처리 되었습니다.');
+                        alert('탈퇴처리 되었습니다');
                         dispatch(setLogout()); //로그아웃
                         setLoading(false);
                         navigate('/',{replace:true});
@@ -59,14 +59,16 @@ export default function MemberLeave({isLogined, userId}) {
             }
             
         }catch(err) {
-            console.log(err);
+            console.error(err.response.data.message);
             if(err.response.status === 301) {
                 navigate('/',{ replace: true });
             }else if(err.response.status === 500) { //람다함수 실행 오류
                 alert('Internal Server Error');
-            }else {
+            }else if(err.response.status === 401) {
                 alert(err.response.data.message);
-                !err.response.data.result && setPasswordChk('비밀번호를 다시 입력해주세요.');
+                setPasswordChk('비밀번호를 다시 입력해주세요');
+            }else {
+                alert('회원탈퇴를 처리하지 못했습니다');
             }
         }
 
@@ -79,6 +81,12 @@ export default function MemberLeave({isLogined, userId}) {
             userId,
             password: data.get('password')
         };
+
+        if(!result.password) {
+            setPasswordChk('비밀번호를 다시 입력해주세요.');
+            return;
+        }
+
         if(isLogined) {
             if (window.confirm('정말 탈퇴하시겠습니까?')) {
                 onConfirm(result);

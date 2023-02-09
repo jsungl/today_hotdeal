@@ -9,7 +9,7 @@ module.exports = {
             });
         });
     },
-    createAuthToken: (userId,token) => {
+    addAuthToken: (userId,token) => {
         return new Promise((resolve, reject) => {
             db.query('INSERT INTO Auth(user_id,auth_token,expire_date) VALUES(?,?,DATE_ADD(NOW(), INTERVAL 5 MINUTE))',[userId,token],(err,data)=>{
                 if(err) reject(err);

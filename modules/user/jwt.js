@@ -48,9 +48,13 @@ module.exports = {
             id: user.user_id,
             nickname: user.user_nickname
         };
-        const accessToken = 
-            jwt.sign(payload, jwtConfig.accessToken().secretKey, jwtConfig.accessToken().options);
+        
+        return new Promise((resolve, reject) => {
+            const accessToken = jwt.sign(payload, jwtConfig.accessToken().secretKey, jwtConfig.accessToken().options);
+            resolve(accessToken);
+        });    
 
-        return accessToken;
+        // const accessToken = jwt.sign(payload, jwtConfig.accessToken().secretKey, jwtConfig.accessToken().options);
+        // return accessToken;
     } 
 }

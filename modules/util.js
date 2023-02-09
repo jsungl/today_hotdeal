@@ -18,7 +18,6 @@ function chkReferer(referrer) {
 }
 
 async function nodeMailer(info) {
-
     try {
         const { userId, token, email } = info;
     
@@ -47,7 +46,7 @@ async function nodeMailer(info) {
 
     }catch(err) {
         console.log(err);
-        return err;
+        throw err;
     }
 
 }

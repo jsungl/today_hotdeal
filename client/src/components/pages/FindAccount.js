@@ -38,8 +38,6 @@ export default function FindAccount() {
         },
     });
     
-
-
     const onhandlePost = async(data) => {
         try {
             const res = await axios.post(`${process.env.REACT_APP_URL}/user/findAccount`,{ email: data });
@@ -47,11 +45,14 @@ export default function FindAccount() {
             if(res.data.result) {
                 alert(msg);
             }
+
         }catch(err) {
-            console.log(err);
+            console.error(err.response.data.message);
             if(err.response.status === 404) {
                 alert(err.response.data.message);
                 setEmailError('다시 입력해주세요');
+            }else {
+                alert('메일전송에 실패하였습니다');
             }
         }
     }

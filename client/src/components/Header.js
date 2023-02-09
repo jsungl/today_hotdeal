@@ -103,8 +103,10 @@ export default function Header({target,keyword,setKeyword,setTarget,searchKeywor
                 navigate('/');
                 //delete axios.defaults.headers.common['Authorization'];
             }
+
         }catch(err) {
-            console.log(err);
+            console.error(err.response.data.message);
+            if(err.response.status === 400) alert(err.response.data.message);
         }
     }
 

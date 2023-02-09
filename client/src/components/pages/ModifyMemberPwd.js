@@ -49,12 +49,14 @@ export default function ModifyMemberPwd({isLogined, userId}) {
             }
 
         }catch(err) {
-            console.log(err);
+            console.error(err.response.data.message);
             if(err.response.status === 301) {
                 navigate('/',{ replace: true });
-            }else {
+            }else if(err.response.status === 401) {
                 alert(err.response.data.message);
-                !err.response.data.isModified && setPasswordChk('비밀번호를 다시 입력해주세요.');
+                setPasswordChk('비밀번호를 다시 입력해주세요.');
+            }else {
+                alert('비밀번호 변경에 실패했습니다');
             }
         }
 
@@ -69,9 +71,15 @@ export default function ModifyMemberPwd({isLogined, userId}) {
             newPassword: data.get('newPassword'),
             rePassword: data.get('rePassword')
         };
-        const { newPassword, rePassword } = result;
+        const { password, newPassword, rePassword } = result;
+
+        // 현재 비밀번호 공백 체크
+        if(!password) {
+            setPasswordChk('비밀번호를 다시 입력해주세요.');
+            return;
+        }
         
-        // 비밀번호 유효성 체크
+        // 새로운 비밀번호 유효성 체크
         const passwordRegex = /^(?=.*[a-zA-Z])(?=.*[!@#$%*])(?=.*[0-9]).{8,12}$/;
         if (!passwordRegex.test(newPassword)) setNewPasswordError('올바른 비밀번호 형식이 아닙니다.');
         else setNewPasswordError('');
@@ -87,7 +95,6 @@ export default function ModifyMemberPwd({isLogined, userId}) {
         ) {
             onhandlePost(result);
         }
-
     }
 
     return(

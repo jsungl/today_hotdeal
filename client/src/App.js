@@ -37,22 +37,19 @@ export default function App() {
   useLayoutEffect(() => {
     async function initializeUser() {
       try{
-        console.log('[App] 로그인검사');
         const result = await axios.get(`${process.env.REACT_APP_URL}/user/checkLogin`,{withCredentials: true});
-        console.log('[App] 로그인 :',result.data.isLogined);
+        console.log('[App] 로그인: ',result.data.isLogined);
         if(result.data.isLogined) { //로그인
-          console.log('[App] 로그인한 유저 정보 : ',result.data.userInfo);
+          console.log('[App] 로그인한 유저 정보: ',result.data.userInfo);
           dispatch(setLogin(result.data.userInfo));
           // let isLogined = sessionStorage.getItem('ILOGIN');
           // if(!isLogined) sessionStorage.setItem('ILOGIN',true); 
-        }else { //로그아웃
-          //sessionStorage.removeItem('ILOGIN');
-          dispatch(setLogout());
         }
 
       }catch(err) {
-        console.log('[App] Error: ',err);
+        console.error(err.response.data.message);
         dispatch(setLogout());
+        //sessionStorage.removeItem('ILOGIN');
       }
     }
 

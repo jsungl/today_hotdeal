@@ -60,7 +60,7 @@ export default function SignUp() {
             }
         })
         .catch((err) => {
-            console.log(err);
+            console.error(err.response.data.message);
             switch(err.response.data.duplication) {
                 case "email" :
                     alert(err.response.data.message);

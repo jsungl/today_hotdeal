@@ -47,10 +47,13 @@ export default function ResetAccount() {
             if(res.data.result) {
                 alert('비밀번호가 변경되었습니다.');
             }
+
         }catch(err) {
-            console.log(err);
+            console.error(err.response.data.message);
             if(err.response.status === 401) {
                 alert(err.response.data.message);
+            }else {
+                alert('비밀번호 재설정에 실패하였습니다');
             }
         }
 

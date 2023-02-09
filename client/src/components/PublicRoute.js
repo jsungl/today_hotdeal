@@ -27,8 +27,9 @@ export default function PublicRoute({restricted}){
                 setLogin(true);
             }
             setLoading(false);
+
         }catch(err) {
-            console.log(err);
+            console.error(err.response.data.message);
         }
     }
 

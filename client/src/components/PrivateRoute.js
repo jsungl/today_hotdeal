@@ -30,8 +30,9 @@ export default function PrivateRoute() {
                 setLogin(true);
             }
             setLoading(false);
+
         }catch(err) {
-            console.log('[PrivateRoute] 로그인검사 에러',err);
+            console.error(err.response.data.message);
         }
     }
 
@@ -44,13 +45,14 @@ export default function PrivateRoute() {
             }
 
         }catch(err) { //토큰 만료 or 인증되지 않는 토큰 -> 로그아웃
-            console.log('[PrivateRoute] 인증실패 :',err);
+            console.error(err.response.data.message);
             if(err.response.status === 301) {
                 navigate('/',{ replace: true });
-            }else {
-                console.log(err.response.data.message);
+            }else if(err.response.status === 401) {
                 dispatch(setLogout());
                 navigate('/login?expired');
+            }else {
+                alert('Internal Server Error');
             }
         }
     }
