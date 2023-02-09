@@ -35,4 +35,15 @@ module.exports = {
             });
         });
     },
+    updateImageName: (postId,updateImgNames) => {
+        return new Promise((resolve, reject) => {
+            db.query('UPDATE Image SET file_name=? WHERE board_no=?',[updateImgNames,postId],(err,data) => { //게시물 이미지 수정
+                if(err) {
+                    reject(err);  
+                }else {
+                    resolve(true);
+                }
+            });
+        });
+    }
 };

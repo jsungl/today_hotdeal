@@ -1,6 +1,28 @@
 const db = require('../../config/db');
 
 module.exports = {
+    getTotalCount: () => { //게시물 총 개수
+        return new Promise((resolve, reject) => {
+            db.query('SELECT count(*) count FROM Board',(err,data)=>{ 
+                if(err) {
+                    reject(err);  
+                }else {
+                    resolve(data);
+                }
+            });
+        });
+    },
+    getFirstPage: () => { //1번째 페이지 데이터 조회(10개)
+        return new Promise((resolve, reject) => {
+            db.query('SELECT * FROM Board ORDER BY board_no desc limit 10 offset 0',(err,data)=>{ 
+                if(err) {
+                    reject(err);  
+                }else {
+                    resolve(data);
+                }
+            });
+        });
+    },
     getAllByUserId: (userId) => { //유저의 모든 게시물 조회
         return new Promise((resolve, reject) => {
             db.query('SELECT board_no, title, category, hits, up, enroll_date FROM Board WHERE user_id=?',[userId],(err,data)=>{ 
@@ -43,6 +65,20 @@ module.exports = {
                     reject(err);  
                 }else {
                     resolve(data);
+                }
+            });
+        });
+    },
+    uploadPost: (postInfo,nickname) => {
+        const { postTitle,postCat,postUrl,prdctMall,prdctName,prdctPrice,dlvyChrg,userId,textContent,htmlContent } = postInfo;
+        return new Promise((resolve, reject) => {
+            db.query('INSERT INTO Board(title,html_content,text_content,user_nickname,category,product_url,product_mall,product_name,product_price,delivery_charge,user_id) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+            [postTitle,htmlContent,textContent,nickname,postCat,postUrl,prdctMall,prdctName,prdctPrice,dlvyChrg,userId],(err,data) => {
+                if (err) {
+                    reject(err); 
+                } else{
+                    const postId = data.insertId;
+                    resolve(postId);
                 }
             });
         });

@@ -117,8 +117,8 @@ export default function BoardUpdate() {
                 setOriginImg(res.data.imageNames);
                 console.log('[BoardUpdate] 게시글 가져오기');
             })
-            .catch(e => {
-                console.error(e.message);
+            .catch(err => {
+                console.error(err.response.data.message);
             });
         }
         getPost();
@@ -139,47 +139,53 @@ export default function BoardUpdate() {
         return textContent;
     }
 
+
     //* 게시글 수정 업로드(S3 임시폴더->영구폴더, DB에서 이미지 경로 수정)
     const updatePost = async(userId,postId) => {
         try {
             // 이미지를 새로 올렸다가 삭제하고 다른것 올린경우 or 새로 올렸다가 삭제한 경우 -> 람다함수 수정
             const moveResult = await axios.put(process.env.REACT_APP_MOVE_S3_OBJECTS,{userId,postId,uploadList:imgNamesArr.uploadList});
-            if(moveResult.status === 200){ //새로 업로드한 이미지 경로만 변경.
-                const updateResult = await axios.post(`${process.env.REACT_APP_URL}/post/updateImagePath`,{
+            if(moveResult.status === 200){ 
+                const updateResult = await axios.post(`${process.env.REACT_APP_URL}/post/updateImagePath`,{ //우선 새롭게 업로드한 이미지 경로만 영구폴더로 변경
                     userId,
                     postId,
                     data:false
                 });
 
                 if(updateResult.data.updated){
-                    if(imgNamesArr.deletedList.length !== 0){ //삭제한 이미지가 있는지 확인 -> 업로드 & 삭제 둘다 한 경우
+                    if(imgNamesArr.deletedList.length !== 0){ //삭제한 이미지가 있는 경우
                         let temp = [];
                         //FIXME: push 사용하지 말것!
                         moveResult.data.map(data=>temp.push(data.split("/").slice(-1)[0]));
                         //FIXME: push 사용하지 말것!
                         imgNamesArr.originList.push(...temp);
                         deleteS3Image(postId);
-                    }else {
+
+                    }else { //삭제한 이미지가 없음
                         let temp = []; //경로에서 이름만 잘라 저장할 임시배열
                         //FIXME: push 사용하지 말것!
                         moveResult.data.map(data=>temp.push(data.split("/").slice(-1)[0]));
-                        console.log('[BoardUpdate] 새로 추가한 이미지 ::',temp);
-                        let data = JSON.stringify(temp); //문자열로 변환
-                        let files = imgNamesArr.originList.length === 0 ? data : JSON.stringify(imgNamesArr.originList.concat(...temp)); //업데이트 할 이미지 이름 문자열(추가한 이미지 포함)
+                        console.log('[BoardUpdate] 새로 추가한 이미지: ',temp);
+                        let data = JSON.stringify(temp);
+                        let files = imgNamesArr.originList.length === 0 ? data : JSON.stringify(imgNamesArr.originList.concat(...temp));
 
-                        //이미지만 추가하여 수정한 경우
-                        await axios.put(`${process.env.REACT_APP_URL}/post/updateImageNames`,{ 
+                        //추가한 이미지를 포함한 새로운 이미지 목록으로 Image 테이블 수정
+                        let result = await axios.put(`${process.env.REACT_APP_URL}/post/updateImageNames`,{ 
                             postId,
                             files
                         });
+                        if(result.data.updated) console.log(result.data.message);
                     } 
                     alert('Update Success!');
                     dispatch(setAsyncSuccess()); //요청 성공
-                    //navigate('/list',{replace:true});
                 }
             }
+
         }catch(err) {
-            console.log('[BoardUpdate] 게시물 수정 업로드 실패 ::',err);
+            if(err.response.status === 500 && err.response.data.message) { //DB에서 에러
+                console.error(err.response.data.message);
+                //TODO: S3 영구폴더에서 새롭게 업로드된 이미지 삭제
+            }
             alert('Update Fail!');
             dispatch(setAsyncError()); //요청 실패
         }
@@ -194,16 +200,17 @@ export default function BoardUpdate() {
                 //console.log(deleteResult);
                 //console.log('[BoardUpdate Component] 삭제하기전 originList ::',imgNamesArr.originList);
                 //FIXME: splice 메소드 사용하지 말것!
-                imgNamesArr.deletedList.map(x=>imgNamesArr.originList.splice(imgNamesArr.originList.indexOf(x),1));
-                let files = imgNamesArr.originList.length !== 0 ? JSON.stringify(imgNamesArr.originList) : null; //문자열로 변환
-                const result = await axios.put(`${process.env.REACT_APP_URL}/post/updateImageNames`,{ //DB에서 삭제된 이미지 파일 삭제
+                imgNamesArr.deletedList.map(x=>imgNamesArr.originList.splice(imgNamesArr.originList.indexOf(x),1)); //기존의 저장되어 있던 이미지들 중에서 삭제한 파일 제외
+                let files = imgNamesArr.originList.length !== 0 ? JSON.stringify(imgNamesArr.originList) : null; //Image 테이블에 새롭게 업데이트할 이미지 목록을 문자열로 변환
+                const result = await axios.put(`${process.env.REACT_APP_URL}/post/updateImageNames`,{ //Image 테이블 수정
                     postId,
                     files
                 });
-                console.log('[BoardUpdate] 이미지 삭제 요청 ::',result.data.updated);
+                if(result.data.updated) console.log(result.data.message);
             }
+
         }catch(err){
-            console.log('[BoardUpdate] 이미지 삭제 요청 실패 ::',err);
+            console.error(err.response.data.message);
             dispatch(setAsyncError()); //요청 실패
         }
     }
@@ -301,17 +308,30 @@ export default function BoardUpdate() {
                     }
                 }
 
+                // const updateData = {
+                //     productName: data.get('productName'),
+                //     productPrice: data.get('productPrice'),
+                //     deliveryCharge: data.get('deliveryCharge'),
+                //     textContent,
+                //     htmlContent,
+                //     postId
+                // };
+                // const {productName,productPrice,deliveryCharge} = updateData;
+                // const fee = Number(deliveryCharge) === 0 ? '무료' : deliveryCharge + '원'; //배송비 0원 일 경우 무료로 설정
+                // updateData.postTitle = `[${mall}] ${productName} (${productPrice}원) (${fee})`; //게시글 제목 : "[쇼핑몰] 상품이름 (상품가격) (배송비)"
+                // console.log('[BoardUpdate] updateData ',updateData);
+
                 const updateData = {
-                    productName: data.get('productName'),
-                    productPrice: data.get('productPrice'),
-                    deliveryCharge: data.get('deliveryCharge'),
+                    prdctName: data.get('productName'),
+                    prdctPrice: data.get('productPrice'),
+                    dlvyChrg: data.get('deliveryCharge'),
                     textContent,
                     htmlContent,
                     postId
                 };
-                const {productName,productPrice,deliveryCharge} = updateData;
-                const fee = Number(deliveryCharge) === 0 ? '무료' : deliveryCharge + '원'; //배송비 0원 일 경우 무료로 설정
-                updateData.postTitle = `[${mall}] ${productName} (${productPrice}원) (${fee})`; //게시글 제목 : "[쇼핑몰] 상품이름 (상품가격) (배송비)"
+                const {prdctName,prdctPrice,dlvyChrg} = updateData;
+                const fee = Number(dlvyChrg) === 0 ? '무료' : dlvyChrg + '원'; //배송비 0원 일 경우 무료로 설정
+                updateData.postTitle = `[${mall}] ${prdctName} (${prdctPrice}원) (${fee})`; //게시글 제목 : "[쇼핑몰] 상품이름 (상품가격) (배송비)"
                 console.log('[BoardUpdate] updateData ',updateData);
             
                 const result = await axios.put(`${process.env.REACT_APP_URL}/post/updatePost`,updateData); //업데이트 폼 전송
@@ -320,6 +340,7 @@ export default function BoardUpdate() {
                     if(imageUpload.flag) {
                         //이미지 업로드한 경우 or 삭제와 업로드 둘다 한 경우
                         updatePost(user,postId); //사용자ID와 게시글 Number 
+
                     }else {
                         //게시글만 수정한 경우 or 이미지만 삭제한 경우 or 이미지 복붙한 경우
                         if(imgNamesArr.deletedList.length !== 0){ //삭제한 이미지가 있는 경우(빈 배열이 아닌경우)
@@ -327,13 +348,8 @@ export default function BoardUpdate() {
                         } 
                         alert('Update Success!');
                         dispatch(setAsyncSuccess()); //요청성공
-                        //navigate('/list',{replace:true});
                     }
 
-                }else { //업데이트 실패
-                    console.log('[BoardUpdate] 업데이트 폼 전송 실패');
-                    alert('Update Fail!');
-                    dispatch(setAsyncError());
                 }
 
             }else{ //수정사항이 없는경우
@@ -341,7 +357,8 @@ export default function BoardUpdate() {
                 navigate('/list',{replace:true});
             }
         }catch(err) {
-            console.log(err);
+            console.error(err.response.data.message);
+            alert('Update Fail!');
             dispatch(setAsyncError());
         }
     }

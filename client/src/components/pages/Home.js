@@ -28,25 +28,26 @@ export default function Home() {
     useEffect(() => {
         async function fetchData() {
             try {
-                const res = await axios.get(`${process.env.REACT_APP_URL}/post/getTotalCount`);
-                res.data[0].map(rowData =>
-                    setTotalCount(rowData.count)
-                );
-                
-                const posts = await res.data[1].map(rowData => (
-                    {
-                        no: rowData.board_no,
-                        title: rowData.product_name,
-                        nickname: rowData.user_nickname, 
-                        date: rowData.enroll_date.substring(0,10), 
-                        hits: rowData.hits, 
-                        up: rowData.up
-                    }
-                ));
-                setPost(posts);
+                const res = await axios.get(`${process.env.REACT_APP_URL}/post/getHomeList`);
+                console.log(res);
+                if(res.data.result) {
+                    setTotalCount(res.data.totalCount);
+                    const posts = await res.data.list.map(rowData => (
+                        {
+                            no: rowData.board_no,
+                            title: rowData.product_name,
+                            nickname: rowData.user_nickname, 
+                            date: rowData.enroll_date.substring(0,10), 
+                            hits: rowData.hits, 
+                            up: rowData.up
+                        }
+                    ));
+                    setPost(posts);
+                }
                 console.log('[Home] 컴포넌트 마운트');
-            } catch(e){
-                console.error(e.message);
+
+            } catch(err){
+                console.error(err.response.data.message);
             }
         }
         fetchData();

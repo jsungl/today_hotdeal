@@ -1,3 +1,4 @@
+/*eslint-disable*/
 import { useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
@@ -105,19 +106,21 @@ export default function BoardWrite() {
         return textContent;
     }
 
-    //* Board 테이블에 있는 게시물 삭제
+    //* 에러 발생시 게시물 삭제
     const deletePost = async(userId,postId) => {
+        console.log('[BoardWrite] 게시물 이미지 업로드 오류');
         try {
-            let res = await axios.delete(`${process.env.REACT_APP_URL}/post/deletePost`,{ data:{ userId, postId}});
-            res.data.result && console.log('삭제확인');
+            //TODO: S3 영구폴더에 해당 게시물 번호로 이미지가 있다면 삭제
+            let res = await axios.delete(`${process.env.REACT_APP_URL}/post/deletePost`,{ data:{ userId, postId } });
+            res.data.result && console.log('게시물 삭제 성공');
+
         }catch(err) {
-            console.log(err);
+            console.error(err.reponse.data.message);
         }
     }
 
     //* 게시물 업로드
     const uploadPost = async(userId,postId) => {
-
         try {
             const result = await axios.put(process.env.REACT_APP_MOVE_S3_OBJECTS,{userId,postId,uploadList:imageUpload.list}); //응답으로 경로가 포함된 이미지 이름 배열을 받는다
             if(result.status === 200){
@@ -139,9 +142,8 @@ export default function BoardWrite() {
             }
 
         }catch(err) {
-            console.log(err);
+            console.error(err.response.data.message);
             if(err.response.status === 500) { //람다함수 실행오류 or DB 이미지 경로 변경 오류
-                console.log('[BoardWrite] 게시물 업로드 요청 오류 ',err.response.data.message);
                 deletePost(userId,postId);
             }
             alert('upload fail!');
@@ -200,21 +202,20 @@ export default function BoardWrite() {
                 }
 
                 console.log('[BoardWrite Component] htmlContent ::',htmlContent);
-                
                 const uploadData = {
-                    postCategory:data.get('postCategory'),
+                    postCat:data.get('postCategory'),
                     postUrl: data.get('postUrl'),
-                    productMall: data.get('productMall'),
-                    productName: data.get('productName'),
-                    productPrice: data.get('productPrice'),
-                    deliveryCharge: data.get('deliveryCharge'),
-                    userId:userName,
+                    prdctMall: data.get('productMall'),
+                    prdctName: data.get('productName'),
+                    prdctPrice: data.get('productPrice'),
+                    dlvyChrg: data.get('deliveryCharge'),
+                    userId: userName,
                     textContent,
                     htmlContent
                 };
-                const {postUrl,productMall,productName,productPrice,deliveryCharge,userId} = uploadData;
-                const fee = Number(deliveryCharge) === 0 ? '무료' : deliveryCharge + '원';
-                uploadData.postTitle = `[${productMall}] ${productName} (${productPrice}원) (${fee})`;
+                const {postUrl,prdctMall,prdctName,prdctPrice,dlvyChrg,userId} = uploadData;
+                const fee = Number(dlvyChrg) === 0 ? '무료' : dlvyChrg + '원';
+                uploadData.postTitle = `[${prdctMall}] ${prdctName} (${prdctPrice}원) (${fee})`;
                 console.log('[BoardWrite] uploadData ::',uploadData);
                 
                 if(checkUrl(postUrl)) {
@@ -227,21 +228,17 @@ export default function BoardWrite() {
                         }else {
                             alert('Upload Success!');
                             dispatch(setAsyncSuccess()); //요청 성공
-                            //navigate('/list',{replace:true});
                         }
-                    }else {
-                        console.log('[BoardWrite] 업로드 폼 전송 실패');
-                        alert('upload fail!');
-                        dispatch(setAsyncError()); //요청 실패
-                    }                
+                    }             
                 }
+
             }else {
                 alert('내용을 입력하세요!');
-                console.log('[BoardWrite] userId: ',userId);
             }
 
         }catch(err) {
-            console.log(err);
+            console.error(err.response.data.message);
+            alert('upload fail!');
             dispatch(setAsyncError()); //요청 실패
         }
 

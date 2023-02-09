@@ -81,7 +81,7 @@ export default function Board() {
                     console.log('[Board Component] 컴포넌트 마운트');
                 })
                 .catch((err) => {
-                    console.error(err);
+                    console.error(err.response.data.message);
                     if(err.response.status === 404) { //게시물이 존재하지 않는 경우
                         alert(err.response.data.message);
                         navigate('/');

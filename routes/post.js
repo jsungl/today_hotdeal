@@ -3,27 +3,56 @@ const db = require('../config/db');
 const sqlToBoardTable = require('../modules/post/sqlToBoardTable');
 const sqlToImageTable = require('../modules/post/sqlToImageTable');
 const checkUser = require('../modules/user/checkUser');
+const { chkReferer } = require('../modules/util');
 const router = express.Router();
 
+//* Referrer 검사
+const checkReferrer = (req,res,next) => {
+    const _csrf = chkReferer(req.headers.referer);
+    if(_csrf) {
+        console.log('Referrer 검사 통과');
+        next();
+    }else {
+        return res.status(301).json({ redirectUrl: '/', message: 'referrer invalid' });
+    }
+
+}
+
 //* 데이터 총 개수, 1번째 페이지(0~10) 데이터 조회 -> Home 컴포넌트
-router.get('/getTotalCount',(req, res) => {
-    const sql1 = 'SELECT count(*) count FROM Board;'; //쿼리 2개 날릴 때 ; 중요
-    const sql2 = 'SELECT * FROM Board ORDER BY board_no desc limit 10 offset 0';
-    db.query(sql1+sql2,(err, data) => {
-        if(!err){
-            res.send(data);
-        } else {
-            res.send(err);
-        }
-    });
+router.get('/getHomeList', async(req, res) => {
+    // 쿼리 2개 요청시 첫번째 쿼리 끝에 세미콜론을 붙여야한다
+    // const sql1 = 'SELECT count(*) count FROM Board;';
+    // const sql2 = 'SELECT * FROM Board ORDER BY board_no desc limit 10 offset 0';
+    // db.query(sql1+sql2,(err, data) => {
+    //     if(!err){
+    //         res.send(data);
+    //     } else {
+    //         res.send(err);
+    //     }
+    // });
+
+    try {
+        const count = await sqlToBoardTable.getTotalCount();
+        const data = await sqlToBoardTable.getFirstPage();
+        console.log(count);
+        return res.status(200).json({ result: true, totalCount: count[0].count, list: data});
+
+    }catch(err) {
+        console.log('GET /post/getHomeList ',err);
+        return res.status(500).json({ message: err.code });
+    }
+
 });
 
 
 //* 게시물 목록 조회(정렬방법, 검색방법, 페이징) 
 router.get('/getBoardList',(req, res) => {
+    let limit = Number(req.query.limit);
+    let offset = Number(req.query.offset);
     let mainSQL = '';
     let subSQL = 'SELECT count(*) FROM Board';
     const keyword = '%' + req.query.keyword + '%';
+
     switch (req.query.target) {
       case 'title':
           //제목
@@ -66,7 +95,7 @@ router.get('/getBoardList',(req, res) => {
           break;
     }
   
-    db.query(mainSQL,[Number(req.query.limit),Number(req.query.offset)],(err, data) => {
+    db.query(mainSQL,[limit,offset],(err, data) => {
         if(!err){
             res.send(data);
         } else {
@@ -108,67 +137,53 @@ router.get('/getBoardContent',async(req, res) => {
             }
         }
         
-        if(userId) { //로그인한 경우
+        if(userId) { //로그인
             let data = await sqlToBoardTable.getAllByPostIdOnLogin(postId,userId);
             if(data.length === 0) {
-                return res.status(404).json({message:'게시물이 존재하지 않습니다.'}); //410도 맞을것같다
+                return res.status(404).json({ message: '게시물이 존재하지 않습니다' }); //410도 맞을것같다
             }else {
                 return res.send(data);
             }
+
         }else { //비로그인
             let data = await sqlToBoardTable.getAllByPostId(postId);
             if(data.length === 0) {
-                return res.status(404).json({message:'게시물이 존재하지 않습니다.'}); //410도 맞을것같다
+                return res.status(404).json({ message: '게시물이 존재하지 않습니다' }); //410도 맞을것같다
             }else {
                 return res.send(data);
             }
         }
 
     }catch(err) {
-        console.log('/GET getBoardContent ',err);
-        //res.send(err);
+        console.log('GET /post/getBoardContent ',err);
+        return res.status(500).json({ message: err.code });
     }
 });
 
 //* 게시물 등록
-router.post('/uploadPost',async(req,res) => {
-    let title = req.body.postTitle;
-    let category = req.body.postCategory;
-    let url = req.body.postUrl;
-    let mall = req.body.productMall;
-    let name = req.body.productName;
-    let price = req.body.productPrice;
-    let dc = req.body.deliveryCharge;
-    let userId = req.body.userId;
-    let textContent = req.body.textContent;
-    let htmlContent = req.body.htmlContent;
-
-    const data = await checkUser.getUserById(userId);
-    const nickname = data[0].user_nickname;
-
-
-    db.query('INSERT INTO Board(title,html_content,text_content,user_nickname,category,product_url,product_mall,product_name,product_price,delivery_charge,user_id) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
-        [title,htmlContent,textContent,nickname,category,url,mall,name,price,dc,userId],(err,data) => {
-            if (err) {
-                console.log('/uploadPost error :: ',err);
-                res.status(500).json({uploaded: false, error: {message:'Upload Fail!'}});
-            } else{
-                const postId = data.insertId;
-                console.log("/uploadPost postId: ",postId);
-                res.status(200).json({uploaded: true, message:'Upload Success!',postId});
-            }
+router.post('/uploadPost', checkReferrer, async(req,res) => {
+    try {
+        const { userId } = req.body;
+        const data = await checkUser.getUserById(userId);
+        const nickname = data[0].user_nickname;
+    
+        const postId = await sqlToBoardTable.uploadPost(req.body,nickname)
+        if(postId) {
+            return res.status(200).json({uploaded: true, message:'Upload Success!', postId});
         }
-    );
 
+    }catch(err) {
+        console.log('POST /post/uploadPost ',err);
+        return res.status(500).json({ message: err.code });
+    }
 });
 
-//* 게시물 이미지 경로 변경(임시폴더->영구폴더)
+//* 게시물 등록 - 이미지 경로 변경(임시폴더->영구폴더)
 router.post('/updateImagePath',async(req,res) => {
     try {
         let userId = req.body.userId;
         let postId = req.body.postId;
         let uploadImgNames = req.body.data;
-        console.log('/updateImagePath 업로드한 이미지: ',uploadImgNames);
     
         const data = await sqlToBoardTable.getAllByPostId(postId);
         if(data !== 0) {
@@ -176,54 +191,62 @@ router.post('/updateImagePath',async(req,res) => {
             const title = data[0].title;
             const newContent = content.replaceAll(`temp/${userId}`,`posts/${userId}/${postId}`);
             await sqlToBoardTable.updateHtmlContent(newContent,postId);
-            if(uploadImgNames){
-                let success = await sqlToImageTable.addImageName(postId,title,uploadImgNames);
-                if(success) return res.status(200).json({updated:true, message:'Image path Update & Image Upload to Table Success!'});
+
+            if(uploadImgNames){ //업로드한 이미지가 있는 경우
+                let success = await sqlToImageTable.addImageName(postId,title,uploadImgNames); //Image 테이블에 추가
+                if(success) return res.status(200).json({ updated: true });
+            
             }else {
-                return res.status(200).json({updated:true, message:'Image path Update Success!'});
+                return res.status(200).json({ updated: true });
             }
+
+        }else {
+            return res.status(404).json({ message:'post is not found' });
         }
 
     }catch(err) {
-        console.log('/POST updateImagePath ',err);
-        res.status(500).json({updated:false, message:'이미지 경로 변경 or 이미지 테이블 업로드 실패'});
+        console.log('POST /post/updateImagePath ',err);
+        return res.status(500).json({ message: err.code });
     }
 });
 
 //* 게시물 수정
-router.put('/updatePost',(req,res) => {
-    let title = req.body.postTitle;
-    let name = req.body.productName;
-    let price = req.body.productPrice;
-    let dc = req.body.deliveryCharge;
-    let postId = req.body.postId;
-    let textContent = req.body.textContent;
-    let htmlContent = req.body.htmlContent;
+router.put('/updatePost', checkReferrer, (req,res) => {
+    // let title = req.body.postTitle;
+    // let name = req.body.productName;
+    // let price = req.body.productPrice;
+    // let dc = req.body.deliveryCharge;
+    // let postId = req.body.postId;
+    // let textContent = req.body.textContent;
+    // let htmlContent = req.body.htmlContent;
+
+    const { postTitle,prdctName,prdctPrice,dlvyChrg,textContent,htmlContent,postId } = req.body;
 
     db.query('UPDATE Board SET title=?, html_content=?, text_content=?, product_name=?, product_price=?, delivery_charge=? WHERE board_no=?',
-        [title,htmlContent,textContent,name,price,dc,postId],(err,data) => {
+        [postTitle,htmlContent,textContent,prdctName,prdctPrice,dlvyChrg,postId],(err,data) => {
             if (err) {
-                console.log('/updatePost error :: ',err);
-                return res.status(500).json({updated: false, error: {message:'Update Fail!'}});
-            } else{
-                return res.status(200).json({updated: true, message:'Update Success!'});
+                console.log('PUT /post/updatePost ',err);
+                return res.status(500).json({ message: err.code });
+
+            }else {
+                return res.status(200).json({ updated: true });
             }
         }
     );
 });
 
 //* 게시물 정보와 이미지 파일 조회(게시글 수정시)
-router.get('/getBoardInfo',async(req, res) => {
+router.get('/getBoardInfo', checkReferrer, async(req, res) => {
     try {
         let postId = req.query.postId;
         let data = await sqlToBoardTable.getAllByPostId(postId);
-        const boardInfo = data;
+        //const boardInfo = data;
         let data2 = await sqlToImageTable.getFileNameByPostId(postId);
-        res.status(200).json({boardInfo,imageNames:data2[0] === undefined ? null : data2[0].file_name});
+        return res.status(200).json({ boardInfo: data, imageNames: data2[0] === undefined ? null : data2[0].file_name });
 
     }catch(err) {
-        console.log('/GET getBoardInfo ',err);
-        res.send(err);
+        console.log('GET /post/getBoardInfo ',err);
+        return res.status(500).json({ message: err.code });
     }
 });
 
@@ -232,49 +255,43 @@ router.put('/updateImageNames',async(req,res) => {
     try {
         const postId = req.body.postId;
         const updatedImgNames = req.body.files;
-        console.log('수정시 업로드한 이미지 :',updatedImgNames);
+        console.log('새롭게 업데이트할 이미지 목록(문자열) :',updatedImgNames);
 
         const data = await sqlToImageTable.getAllByPostId(postId);
-        if(data[0] === undefined){ //DB에 저장된 이미지가 없는 게시글인 경우
-            console.log('Image 테이블에 저장된 이미지가 없음');
+        if(data[0] === undefined){ //기존에 저장된 이미지가 없었던 게시물인 경우 -> 새롭게 추가
+            console.log('Image 테이블에 저장된 이미지가 없었음');
             let title = await sqlToBoardTable.getTitleByPostId(postId);
-            db.query('INSERT INTO Image(board_no,title,file_name) VALUES(?,?,?)',[postId,title,updatedImgNames],(err,data) => {
-                if(err){
-                    console.log(err);
-                }else{
-                    res.status(200).json({updated: true, message:'Update Image FIle Name Success!'});
-                }
-            });
-        }else {
-            console.log('Image 테이블에 저장된 이미지가 있음');
-            db.query('UPDATE Image SET file_name=? WHERE board_no=?',[updatedImgNames,postId],(err,data) => {
-                if(err){
-                    console.log(err);
-                }else{
-                    res.status(200).json({updated: true, message:'Update Image FIle Name Success!'});
-                }
-        
-            });
+            let result = await sqlToImageTable.addImageName(postId,title,updatedImgNames);
+            if(result) {
+                return res.status(200).json({updated: true, message:'Upload Image Table Success!'});
+            }
+
+        }else { //이미 기존에 저장된 이미지가 있었던 게시물인 경우 -> 새롭게 변경
+            console.log('Image 테이블에 저장된 이미지가 있었음');
+            let result = await sqlToImageTable.updateImageName(updatedImgNames,postId);
+            if(result) {
+                return res.status(200).json({updated: true, message:'Update Image Table Success!'});
+            }
         }
 
     }catch(err) {
-        console.log('/PUT updateImageNames ',err);
-        res.send(err);
+        console.log('PUT /post/updateImageNames ',err);
+        return res.status(500).json({ message: err.code });
     }
 });
 
 //* 게시물 추천
-router.post('/increaseUp',(req,res) => {
+router.post('/increaseUp',checkReferrer,(req,res) => {
     let userId = req.body.userId;
     let postId = req.body.postId;
     
     if(userId && postId) {
         db.query('INSERT INTO Up(user_id,board_no) VALUES(?,?)',[userId,postId],(err,data) => {
             if(err){
-                console.log('/POST increaseUp ',err);
-                res.status(500).json({message: err.code});
+                console.log('POST /post/increaseUp ',err);
+                return res.status(500).json({message: err.code});
             }else{
-                res.status(200).json({result: true, message:'추천하였습니다'});
+                return res.status(200).json({result: true, message:'추천하였습니다'});
             }
         });
     }else {
@@ -283,17 +300,17 @@ router.post('/increaseUp',(req,res) => {
 });
 
 //* 게시물 추천 취소
-router.delete('/decreaseUp',(req,res) => {
+router.delete('/decreaseUp',checkReferrer,(req,res) => {
     let userId = req.body.userId;
     let postId = req.body.postId;
 
     if(userId && postId) {
         db.query('DELETE FROM Up WHERE user_id=? AND board_no=?',[userId,postId],(err,data) => {
             if(err){
-                console.log('/DELETE decreaseUp ',err);
-                res.status(500).json({message: err.code});
+                console.log('DELETE /post/decreaseUp ',err);
+                return res.status(500).json({message: err.code});
             }else{
-                res.status(200).json({result: true, message:'추천을 취소하였습니다'});
+                return res.status(200).json({result: true, message:'추천을 취소하였습니다'});
             }
         });
     }else {
@@ -303,21 +320,21 @@ router.delete('/decreaseUp',(req,res) => {
 });
 
 //* 게시물 삭제
-router.delete('/deletePost',(req,res) => {
+router.delete('/deletePost',checkReferrer,(req,res) => {
     let userId = req.body.userId;
     let postId = req.body.postId;
 
     if(userId && postId) {
         db.query('DELETE FROM Board WHERE user_id=? AND board_no=?',[userId,postId],(err,data) => {
             if(err){
-                console.log('/DELETE deletePost ',err);
-                res.status(500).json({message: err.code});
+                console.log('DELETE /post/deletePost ',err);
+                res.status(500).json({ message: err.code });
             }else{
-                res.status(200).json({result: true});
+                res.status(200).json({ result: true });
             }
         });
     }else {
-        res.status(400).json({message: 'userId invalid or postId invalid'});
+        res.status(400).json({ message: 'userId invalid or postId invalid' });
     } 
 });
 
