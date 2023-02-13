@@ -15,7 +15,7 @@ import FindAccount from './components/pages/FindAccount';
 import BoardUpdate from './components/pages/BoardUpdate';
 import PrivateRoute from './components/PrivateRoute';
 import PublicRoute from './components/PublicRoute';
-import ResetAccount from './components/pages/ResetAccount';
+import ResetPassword from './components/pages/ResetPassword';
 import { setLogin, setLogout } from './modules/users';
 import axios from 'axios';
 
@@ -77,7 +77,7 @@ export default function App() {
         <Route path='/signUp' element={<SignUp/>} />
       </Route> 
       <Route path='/findAccount' element={<FindAccount />} />
-      <Route path='/user/reset' element={<ResetAccount />} />
+      <Route path='/resetPassword' element={<ResetPassword />} />
       <Route path='*' element={<NotFound />}/>
     </Routes>
   );
