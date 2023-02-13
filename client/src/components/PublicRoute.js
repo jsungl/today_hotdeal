@@ -30,6 +30,7 @@ export default function PublicRoute({restricted}){
 
         }catch(err) {
             console.error(err.response.data.message);
+            setLoading(false);
         }
     }
 

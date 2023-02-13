@@ -33,6 +33,7 @@ export default function PrivateRoute() {
 
         }catch(err) {
             console.error(err.response.data.message);
+            setLoading(false);
         }
     }
 
