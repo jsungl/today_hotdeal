@@ -29,7 +29,6 @@ export default function Home() {
         async function fetchData() {
             try {
                 const res = await axios.get(`${process.env.REACT_APP_URL}/post/getHomeList`);
-                console.log(res);
                 if(res.data.result) {
                     setTotalCount(res.data.totalCount);
                     const posts = await res.data.list.map(rowData => (

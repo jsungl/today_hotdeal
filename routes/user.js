@@ -14,9 +14,9 @@ const router = express.Router();
 const checkReferrer = (req,res,next) => {
     const _csrf = chkReferer(req.headers.referer);
     if(_csrf) {
-        console.log('Referrer 검사 통과');
         next();
     }else {
+        console.log('Referrer 검사 통과 실패');
         return res.status(301).json({ redirectUrl: '/', message: 'referrer invalid' });
     }
 
@@ -261,11 +261,7 @@ router.get('/checkLogin', checkReferrer, async(req,res) => {
                 const userInfo = {userId:userId, userNickname:result[0].user_nickname};
                 return res.status(200).json({ isLogined: true, userInfo });
             }
-            // else {
-            //     console.log('일치하는 닉네임 없음!');
-            //     delAllCookies(req,res);
-            //     return res.status(200).json({isLogined: false});
-            // }
+
         }
 
     }catch(err) {
@@ -494,7 +490,7 @@ router.post('/resetPassword', checkReferrer, async(req, res) => {
             }
 
         }else { //토큰 검증 실패
-            return res.status(401).json({ message:'이미 비밀번호를 재설정 했거나 재설정 시간이 초과되었습니다' });
+            return res.status(401).json({ message:'토큰이 유효하지 않습니다' });
         }
 
     }catch(err) {

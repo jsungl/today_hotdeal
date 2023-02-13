@@ -10,9 +10,9 @@ const router = express.Router();
 const checkReferrer = (req,res,next) => {
     const _csrf = chkReferer(req.headers.referer);
     if(_csrf) {
-        console.log('Referrer 검사 통과');
         next();
     }else {
+        console.log('Referrer 검사 통과 실패!');
         return res.status(301).json({ redirectUrl: '/', message: 'referrer invalid' });
     }
 
@@ -34,7 +34,6 @@ router.get('/getHomeList', async(req, res) => {
     try {
         const count = await sqlToBoardTable.getTotalCount();
         const data = await sqlToBoardTable.getFirstPage();
-        console.log(count);
         return res.status(200).json({ result: true, totalCount: count[0].count, list: data});
 
     }catch(err) {
