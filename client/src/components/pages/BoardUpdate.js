@@ -127,9 +127,10 @@ export default function BoardUpdate() {
     useEffect(() => {
         if (success) {
             dispatch(setAsyncInit());
-            navigate('/list',{replace:true});
+            //navigate('/list',{replace:true});
+            navigate(`/board/${postId}`,{replace:true});
         }
-    }, [success, navigate, dispatch]);
+    }, [success, postId, navigate, dispatch]);
 
 
     //* content를 html과 text로 나누기

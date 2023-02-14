@@ -259,9 +259,9 @@ router.put('/updateImageNames',async(req,res) => {
         const data = await sqlToImageTable.getAllByPostId(postId);
         if(data[0] === undefined){ //기존에 저장된 이미지가 없었던 게시물인 경우 -> 새롭게 추가
             console.log('Image 테이블에 저장된 이미지가 없었음');
-            let title = await sqlToBoardTable.getTitleByPostId(postId);
-            let result = await sqlToImageTable.addImageName(postId,title,updatedImgNames);
-            if(result) {
+            let result = await sqlToBoardTable.getTitleByPostId(postId);
+            let result2 = await sqlToImageTable.addImageName(postId,result[0].title,updatedImgNames);
+            if(result2) {
                 return res.status(200).json({updated: true, message:'Upload Image Table Success!'});
             }
 

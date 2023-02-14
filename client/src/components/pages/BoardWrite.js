@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import { useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
@@ -7,7 +7,6 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Editor from '../Editor';
-//import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import Stack from '@mui/material/Stack';
@@ -16,7 +15,7 @@ import store from '../../modules/index';
 import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
 import { setAsync, setAsyncSuccess, setAsyncError, setAsyncInit } from '../../modules/asyncReqState';
-import { setPostInit } from '../../modules/posts';
+import { setPostInit, setPostNumber } from '../../modules/posts';
 
 
 export default function BoardWrite() {
@@ -24,13 +23,12 @@ export default function BoardWrite() {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const content = useSelector(state => state.postReducer.content);
-    //const flag = useSelector(state => state.postReducer.flag);
+    const postId = useSelector(state => state.postReducer.postId);
     const userId = useSelector(state => state.userReducer.userId);
     const loading = useSelector(state => state.asyncReqReducer.loading);
     const success = useSelector(state => state.asyncReqReducer.success);
     
     const userName = userId;
-    //const imageUpload = {flag: flag, list:[]};
     const imageUpload = {list:[], flag:false};
     const style = {
        paddingRight:'10px'
@@ -83,7 +81,8 @@ export default function BoardWrite() {
     useEffect(() => {
         if (success) {
             dispatch(setAsyncInit());
-            navigate('/list',{replace:true});
+            //navigate('/list',{replace:true});
+            navigate(`/board/${postId}`,{replace:true});
         }
     }, [success, navigate, dispatch]);
 
@@ -221,10 +220,11 @@ export default function BoardWrite() {
                 if(checkUrl(postUrl)) {
                     const result = await axios.post(`${process.env.REACT_APP_URL}/post/uploadPost`,uploadData); 
                     if(result.data.uploaded){
-                        console.log('[BoardWrite] 본문에 이미지 있는지 확인 ::',imageUpload.flag);
+                        console.log('[BoardWrite] 본문에 이미지 있는지 확인 ::',imageUpload.flag);                        
+                        dispatch(setPostNumber(result.data.postId));
                         if(imageUpload.flag) {
-                            const postId = result.data.postId;
-                            uploadPost(userId,postId);
+                            let postNumber = result.data.postId;
+                            uploadPost(userId,postNumber);
                         }else {
                             alert('Upload Success!');
                             dispatch(setAsyncSuccess()); //요청 성공
