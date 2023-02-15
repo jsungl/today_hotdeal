@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { setLogout } from '../modules/users';
 //import { Cookies } from 'react-cookie';
 import axios from 'axios';
 import Typography from '@mui/material/Typography';
+import Link from '@mui/material/Link';
 import Toolbar from '@mui/material/Toolbar';
 import Box from '@mui/material/Box';
 import AppBar from '@mui/material/AppBar';
@@ -28,22 +29,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import PersonAdd from '@mui/icons-material/PersonAdd';
 import '../style/header.css'; //google web fonts
 
-const customTheme = createTheme({
-    palette: {
-        primary: {
-            main: '#337ab7',
-        },
-    },
-    breakpoints: {
-        values: {
-            xs: 0,
-            sm: 576,
-            md: 768,
-            lg: 992,
-            xl: 1200,
-        },
-    },
-});
+
 
 export default function Header({target,setTarget,keyword,searchKeyword,searchText}) {
     const title = 'Hot Deal';
@@ -56,6 +42,38 @@ export default function Header({target,setTarget,keyword,searchKeyword,searchTex
     const userNickname = useSelector(state => state.userReducer.userNickname);
     const isLogined = useSelector(state => state.userReducer.isLogined);
     //const cookies = new Cookies();
+
+    const handleResize = useCallback(() => {
+        if(window.innerWidth > 768 && checked) {
+            console.log('check change');
+            setChecked(false);
+        }
+    },[checked]);
+
+    useEffect(() => {
+        window.addEventListener('resize', handleResize);
+        return () => {
+            window.removeEventListener('resize', handleResize);
+        }
+
+    },[handleResize]);
+
+    const customTheme = createTheme({
+        palette: {
+            primary: {
+                main: '#337ab7',
+            },
+        },
+        breakpoints: {
+            values: {
+                xs: 0,
+                sm: 576,
+                md: 768,
+                lg: 992,
+                xl: 1200,
+            },
+        },
+    });
 
     const handleCloseUserMenu = () => {
         setAnchorElUser(null);
@@ -187,17 +205,15 @@ export default function Header({target,setTarget,keyword,searchKeyword,searchTex
                                     <Typography
                                         variant="h5"
                                         noWrap
-                                        component="a"
-                                        href="/"
                                         sx={{
-                                            fontFamily: 'Anton',
+                                            fontFamily: "Anton",
                                             fontWeight: 400,
-                                            letterSpacing: '.1rem',
-                                            color: 'inherit',
-                                            textDecoration: 'none',
+                                            letterSpacing: ".1rem",
                                         }}
                                     >
-                                        {title}
+                                        <Link href="/" underline="none" color="#fff" sx={{'&:hover': {textDecoration: "none"}}}>
+                                            {title}
+                                        </Link>
                                     </Typography>
                                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                         <Paper

@@ -67,6 +67,7 @@ export default function BoardListHeader({onClickHome,onChangeCategory,category})
                         color: Number(category) === item.value ? '#337ab7' : '#444',
                         display: 'block',
                         fontWeight:'bold',
+                        mx:2,
                         '&:hover': {
                             background: 'none'
                         }
