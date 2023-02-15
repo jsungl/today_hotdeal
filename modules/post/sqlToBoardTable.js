@@ -94,6 +94,28 @@ module.exports = {
             });
         });
     },
+    increaseUp: (postId) => {
+        return new Promise((resolve, reject) => {
+            db.query('UPDATE Board SET up=up+1 WHERE board_no=?',[postId],(err,data) => { //추천
+                if(err) {
+                    reject(err);  
+                }else {
+                    resolve(data);
+                }
+            });
+        });
+    },
+    decreaseUp: (postId) => {
+        return new Promise((resolve, reject) => {
+            db.query('UPDATE Board SET up=up-1 WHERE board_no=?',[postId],(err,data) => { //추천취소
+                if(err) {
+                    reject(err);  
+                }else {
+                    resolve(data);
+                }
+            });
+        });
+    },
     updateHtmlContent: (content, postId) => {
         return new Promise((resolve, reject) => {
             db.query('UPDATE Board SET html_content=? WHERE board_no=?',[content,postId],(err,data) => { //이미지 파일 경로 수정(임시폴더->영구폴더)

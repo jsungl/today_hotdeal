@@ -89,7 +89,7 @@ export default function Board() {
                 });
         };
         fetchData();
-    },[postId,userId,navigate]);
+    },[postId,userId,clickedUp,navigate]);
 
     //* 게시물 추천
     const handleUpBtn = async() => {
