@@ -45,7 +45,7 @@ const customTheme = createTheme({
     },
 });
 
-export default function Header({target,keyword,setKeyword,setTarget,searchKeyword,searchText}) {
+export default function Header({target,setTarget,keyword,searchKeyword,searchText}) {
     const title = 'Hot Deal';
     const [anchorElUser, setAnchorElUser] = useState(null);
     const [checked, setChecked] = useState(false);
@@ -65,9 +65,9 @@ export default function Header({target,keyword,setKeyword,setTarget,searchKeywor
         setAnchorElUser(event.currentTarget);
     };
 
-    const onChangeInput = (event) => {
-        setKeyword(event.target.value);
-    };
+    // const onChangeInput = (event) => {
+        // setKeyword(event.target.value);
+    // };
 
     const onChangeTarget = (event) => {
         setTarget(event.target.value);
@@ -168,9 +168,8 @@ export default function Header({target,keyword,setKeyword,setTarget,searchKeywor
                                                 variant="standard"
                                                 InputProps={{ disableUnderline: true }}
                                                 sx={{ ml: 1 }}
-                                                onChange={onChangeInput}
+                                                defaultValue={keyword}
                                                 inputRef={searchText}
-                                                value={keyword}
                                             />
                                             <IconButton type="submit" sx={{ p: '10px' }}>
                                                 <SearchIcon />
@@ -243,9 +242,8 @@ export default function Header({target,keyword,setKeyword,setTarget,searchKeywor
                                                 variant="standard"
                                                 InputProps={{ disableUnderline: true }}
                                                 sx={{ ml: 1 }}
-                                                onChange={onChangeInput}
+                                                defaultValue={keyword}
                                                 inputRef={searchText}
-                                                value={keyword}
                                             />
                                             <IconButton type="submit" sx={{ p: '10px' }}>
                                                 <SearchIcon />

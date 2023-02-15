@@ -5,19 +5,21 @@ import axios from 'axios';
 import Pagination from '../Pagination';
 import Table from '../BoardListTable';
 import BoardListHeader from '../BoardListHeader';
+import BoardListFooter from '../BoardListFooter';
 //import SearchBar from '../SearchBar';
 
 
 export default function Home() {
     console.log('=========Home Component Rendering=========');
     const [params] = useOutletContext();
-    //const [params] = useSearchParams();
-    // const queryTarget = params.get('search_target') === null ? 'title_content' : params.get('search_target');
-    // const queryKeyword = params.get('search_keyword') === null ? '' : params.get('search_keyword');
-    const align = params.get('align') === null ? 'board_no' : params.get('align');
-    const currentPage = params.get('page') === null ? 1 : params.get('page');
     const [post,setPost] = useState([]);
     const [totalCount,setTotalCount] = useState(0);
+    // const [params] = useSearchParams();
+    // const queryTarget = params.get('search_target') === null ? 'title_content' : params.get('search_target');
+    // const queryKeyword = params.get('search_keyword') === null ? '' : params.get('search_keyword');
+    const align = params.get('align') || 'board_no';
+    const category = params.get('cat') || -1;
+    const currentPage = params.get('page') === null ? 1 : params.get('page');
     // const [keyword,setKeyword] = useState(queryKeyword);
     // const [target,setTarget] = useState(queryTarget);
     const postPerPage = 10; //페이지당 보여줄 데이터 개수
@@ -53,12 +55,19 @@ export default function Home() {
     },[]);
 
     //정렬 select 선택시 호출
-    const onChangeAlign = (pageAlign) => {
+    const onChangeAlign = (align) => {
         navigate({
             pathname: '/list',
-            search: `align=${pageAlign}`,
+            search: `align=${align}`,
         });
-        //console.log('[Home Component] align change!');
+    };
+
+    // 카테고리 select 선택
+    const onChangeCategory = (category) => {
+        navigate({
+            pathname: '/list',
+            search: `cat=${category}`,
+        });
     };
 
     //검색 필드(textfield) 값 변경될 때마다 호출
@@ -98,22 +107,15 @@ export default function Home() {
     //     });
     //     console.log('-------------Search Form Submit------------');
     // };
-    
-
-    // console.log('[Home Component] posts ::', post);
-    // console.log('[Home Component] totalCount ::', totalCount);
-    // console.log('[Home Component] align ::', align);
-    // console.log('[Home Component] keyword ::', queryKeyword);
-    // console.log('[Home Component] target ::', queryTarget);
-    // console.log('[Home Component] currentPage ::', currentPage);
 
     return (
             <>
-                {/* <SearchBar target={target} searchKeyword={searchKeyword} searchText={searchText} onChangeTarget={onChangeTarget} onChangeInput={onChangeInput}/> */}
-                <BoardListHeader onClickHome={onClickHome} onChangeAlign={onChangeAlign} align={align}/>
+                <BoardListHeader onClickHome={onClickHome} onChangeCategory={onChangeCategory} category={category}/>
 
                 <Table post={post}/>
-            
+
+                <BoardListFooter onChangeAlign={onChangeAlign} align={align}/>
+                
                 <Pagination page={currentPage} totalCount={totalCount} postPerPage={postPerPage} onChangePage={onChangePage}/>
             </>
     );

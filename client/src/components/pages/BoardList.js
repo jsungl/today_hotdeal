@@ -4,15 +4,18 @@ import { useOutletContext, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Table from '../BoardListTable';
 import BoardListHeader from '../BoardListHeader';
+import BoardListFooter from '../BoardListFooter';
 import Pagination from '../Pagination';
-//import SearchBar from '../SearchBar';
 
 export default function BoardList() {
     console.log('=========BoardList Component Rendering=========');
+    const navigate = useNavigate();
     const [params,setParams] = useOutletContext();
-    //const [params, setParams] = useSearchParams();
+    //const {pathname, search} = useLocation();
+    //const currentPath = pathname + search; 현재 페이지 주소(쿼리스트링 포함)
     const page = Number(params.get('page'));
-    const align = params.get('align');
+    const align = params.get('align') || 'board_no';
+    const category = params.get('cat') || -1;
     const queryKeyword = params.get('search_keyword');
     const queryTarget = params.get('search_target');
     const [post,setPost] = useState([]); //데이터 목록
@@ -23,11 +26,6 @@ export default function BoardList() {
     //const [currentPage, setCurrentPage] = useState(Number(pageNum)); //현재 페이지
     const postPerPage = 10; //페이지당 보여줄 데이터 개수
     
-    //const searchText = useRef(null); //검색 TextField enter 입력시 focus out
-    const navigate = useNavigate();
-
-    //const {pathname, search} = useLocation();
-    //const currentPath = pathname + search; 현재 페이지 주소(쿼리스트링 포함)
     
     useEffect(() => {
         async function fetchData() {
@@ -38,10 +36,12 @@ export default function BoardList() {
                         'offset': ((Number(params.get('page')) || 1)-1)*postPerPage,
                         'limit': postPerPage,
                         'keyword': params.get('search_keyword') ? params.get('search_keyword').toLowerCase().replace(' ', '') : '',
-                        'target': params.get('search_target') || 'title_content'
+                        'target': params.get('search_target') || 'title_content',
+                        'category': params.get('cat') || -1
                     }
                 });
                 res.data.length === 0 ? setTotalCount(1) : setTotalCount(res.data[0].count);
+                //res.data.length === 0 ? setTotalCount(1) : setTotalCount(res.data.length);
                 const posts = await res.data.map(rowData => (
                     {
                         no: rowData.board_no,
@@ -53,7 +53,7 @@ export default function BoardList() {
                     }
                 ));
                 setPost(posts);
-                console.log('[BoardList Component] 컴포넌트 마운트');
+                console.log('[BoardList] 컴포넌트 마운트');
             } catch(e){
                 console.error(e.message);
             }
@@ -63,6 +63,7 @@ export default function BoardList() {
 
     //정렬 select 선택시 호출되는 함수
     const onChangeAlign = (selectedAlign) => { 
+        /*
         if(queryKeyword && queryTarget){
             //queryString에 keyword나 target이 있는경우
             setParams({
@@ -82,8 +83,26 @@ export default function BoardList() {
                 setParams({align:selectedAlign,page:1});
             }
         }
-        console.log('[BoardList Component] Align Change');
+        */
+
+        if(align) {
+            params.set('align',selectedAlign);
+        }else {
+            params.append('align',selectedAlign);
+        }
+
+        setParams(params);
     }
+
+    // 카테고리 select 선택
+    const onChangeCategory = (category) => {
+        if(category) {
+            params.set('cat',category);
+        }else {
+            params.append('cat',category);
+        }
+        setParams(params);
+    };
 
     //검색 필드(textfield) 값 변경될 때마다 호출
     // const onChangeInput = useCallback((event) => {
@@ -97,6 +116,7 @@ export default function BoardList() {
     
     //페이지 변경시 호출되는 함수
     const onChangePage = (nextPage) => {
+        /*
         if(queryKeyword && queryTarget){
             //queryString에 keyword나 target이 있는경우
             if(align) {
@@ -115,21 +135,14 @@ export default function BoardList() {
             }
             
         } else {
-            //queryString에 keyword나 target이 없는경우
-            // if(page && !align) {
-            //     //page만 있는경우
-            //     setParams({page:nextPage});
-            // } else {
-            //     //align만 있거나 align,page 둘다 있는경우
-            //     setParams({align, page:nextPage});
-            // }
-
             if(align) {
                 setParams({align, page:nextPage});
             }else {
                 setParams({page:nextPage});
             }
         }
+        */
+        
         // ex) /list?align=board_no&page=2 
         // navigate({
         //     pathname:'/list',
@@ -138,7 +151,15 @@ export default function BoardList() {
         //         page:nextPage
         //     })}`
         // });
-        console.log('-----------Page Change----------');
+
+        if(page) {
+            params.set('page',nextPage);
+        }else {
+            params.append('page',nextPage);
+        }
+
+        setParams(params);
+
     };
 
     //홈 버튼 클릭시 호출
@@ -147,17 +168,11 @@ export default function BoardList() {
         //window.location.href = '/';
     };
     
-    //Search Form Submit
-    // const searchKeyword = (event) => {
-    //     event.preventDefault();
-    //     searchText.current.blur();
-    //     setParams({search_target:target,search_keyword:keyword});
-    // };
-    
     let BoardListInfo = {
         post,
         totalCount,
         align,
+        category,
         queryKeyword,
         queryTarget,
         page
@@ -166,12 +181,11 @@ export default function BoardList() {
 
     return (
             <>
-                {/* <SearchBar target={target} searchKeyword={searchKeyword} searchText={searchText} onChangeTarget={onChangeTarget} 
-                    onChangeInput={onChangeInput} keyword={keyword}/> */}
-
-                <BoardListHeader onClickHome={onClickHome} onChangeAlign={onChangeAlign} align={align}/>
+                <BoardListHeader onClickHome={onClickHome} onChangeCategory={onChangeCategory} category={category}/>
 
                 <Table post={post}/>
+
+                <BoardListFooter onChangeAlign={onChangeAlign} align={align}/>
 
                 <Pagination page={page} totalCount={totalCount} postPerPage={postPerPage} onChangePage={onChangePage}/>
             </>

@@ -48,32 +48,59 @@ router.get('/getHomeList', async(req, res) => {
 router.get('/getBoardList',(req, res) => {
     let limit = Number(req.query.limit);
     let offset = Number(req.query.offset);
+    let category = Number(req.query.category);
+    let target = req.query.target;
     let mainSQL = '';
     let subSQL = 'SELECT count(*) FROM Board';
+    // let testSubSQL = 'SELECT count(*) FROM Board';
+    // let testSQL = '';
     const keyword = '%' + req.query.keyword + '%';
 
-    switch (req.query.target) {
-      case 'title':
-          //제목
-          subSQL += ` WHERE title like ${db.escape(keyword)}`;    
-          mainSQL = 'SELECT *,(' + subSQL + `) count FROM Board WHERE title like ${db.escape(keyword)}`;
-          break;
-      case 'content':
-          //내용
-          subSQL += ` WHERE text_content like ${db.escape(keyword)}`;
-          mainSQL = 'SELECT *,(' + subSQL + `) count FROM Board WHERE text_content like ${db.escape(keyword)}`;
-          break;
-      case 'writer':
-          //글쓴이     
-          subSQL += ` WHERE user_id like ${db.escape(keyword)}`;
-          mainSQL = 'SELECT *,(' + subSQL + `) count FROM Board WHERE user_nickname like ${db.escape(keyword)}`;
-          break;
-      default:
-          //제목+내용
-          subSQL += ` WHERE title like ${db.escape(keyword)} OR text_content like ${db.escape(keyword)}`;
-          mainSQL = 'SELECT *,(' + subSQL + `) count FROM Board WHERE title like ${db.escape(keyword)} OR text_content like ${db.escape(keyword)}`;
-          break;
+
+    if(target === 'title_content') {
+        if(category > 0) {
+            subSQL += ` WHERE (title like ${db.escape(keyword)} OR text_content like ${db.escape(keyword)}) AND category=${category}`;
+            mainSQL = 'SELECT *,(' + subSQL + `) count FROM Board WHERE (title like ${db.escape(keyword)} OR text_content like ${db.escape(keyword)}) AND category=${category}`;
+            // mainSQL = `SELECT * FROM Board WHERE (title like ${db.escape(keyword)} OR text_content like ${db.escape(keyword)}) AND category=${category}`;
+        }else {
+            subSQL += ` WHERE title like ${db.escape(keyword)} OR text_content like ${db.escape(keyword)}`;
+            mainSQL = 'SELECT *,(' + subSQL + `) count FROM Board WHERE title like ${db.escape(keyword)} OR text_content like ${db.escape(keyword)}`;
+            // mainSQL = `SELECT * FROM Board WHERE title like ${db.escape(keyword)} OR text_content like ${db.escape(keyword)}`;
+        }
+    }else {
+        if(category > 0) {
+            subSQL += ` WHERE ${target} like ${db.escape(keyword)} AND category=${category}`;
+            mainSQL = 'SELECT *,(' + subSQL + `) count FROM Board WHERE (${target} like ${db.escape(keyword)}) AND category=${category}`;
+            // mainSQL = `SELECT * FROM Board WHERE (${target} like ${db.escape(keyword)}) AND category=${category}`;
+        }else {
+            subSQL += ` WHERE ${target} like ${db.escape(keyword)}`;
+            mainSQL = 'SELECT *,(' + subSQL + `) count FROM Board WHERE ${target} like ${db.escape(keyword)}`;
+            // mainSQL = `SELECT * FROM Board WHERE ${target} like ${db.escape(keyword)}`;
+        }
     }
+
+    // switch (req.query.target) {
+    //   case 'title':
+    //       //제목
+    //       subSQL += ` WHERE title like ${db.escape(keyword)}`;    
+    //       mainSQL = 'SELECT *,(' + subSQL + `) count FROM Board WHERE title like ${db.escape(keyword)}`;
+    //       break;
+    //   case 'content':
+    //       //내용
+    //       subSQL += ` WHERE text_content like ${db.escape(keyword)}`;
+    //       mainSQL = 'SELECT *,(' + subSQL + `) count FROM Board WHERE text_content like ${db.escape(keyword)}`;
+    //       break;
+    //   case 'writer':
+    //       //글쓴이     
+    //       subSQL += ` WHERE user_id like ${db.escape(keyword)}`;
+    //       mainSQL = 'SELECT *,(' + subSQL + `) count FROM Board WHERE user_nickname like ${db.escape(keyword)}`;
+    //       break;
+    //   default:
+    //       //제목+내용
+    //       subSQL += ` WHERE title like ${db.escape(keyword)} OR text_content like ${db.escape(keyword)}`;
+    //       mainSQL = 'SELECT *,(' + subSQL + `) count FROM Board WHERE title like ${db.escape(keyword)} OR text_content like ${db.escape(keyword)}`;
+    //       break;
+    // }
   
     switch(req.query.align) {
       case 'hits':
@@ -280,42 +307,62 @@ router.put('/updateImageNames',async(req,res) => {
 });
 
 //* 게시물 추천
-router.post('/increaseUp',checkReferrer,(req,res) => {
-    let userId = req.body.userId;
-    let postId = req.body.postId;
-    
-    if(userId && postId) {
-        db.query('INSERT INTO Up(user_id,board_no) VALUES(?,?)',[userId,postId],(err,data) => {
-            if(err){
-                console.log('POST /post/increaseUp ',err);
-                return res.status(500).json({message: err.code});
-            }else{
-                return res.status(200).json({result: true, message:'추천하였습니다'});
+router.post('/increaseUp',checkReferrer, async(req,res) => {
+    try {
+        let userId = req.body.userId;
+        let postId = req.body.postId;
+        
+        if(userId && postId) {
+            let result = await sqlToBoardTable.increaseUp(postId);
+            if(result) {
+                db.query('INSERT INTO Up(user_id,board_no) VALUES(?,?)',[userId,postId],(err,data) => {
+                    if(err){
+                        console.log('POST /post/increaseUp ',err);
+                        return res.status(500).json({message: err.code});
+                    }else{
+                        return res.status(200).json({result: true, message:'추천하였습니다'});
+                    }
+                });
             }
-        });
-    }else {
-        res.status(400).json({message: 'userId invalid or postId invalid'});
+        }else {
+            res.status(400).json({message: 'userId invalid or postId invalid'});
+        }
+
+
+    }catch(err) {
+        console.log('POST /post/increaseUp ',err);
+        return res.status(500).json({ message: err.code });
     }
+    
 });
 
 //* 게시물 추천 취소
-router.delete('/decreaseUp',checkReferrer,(req,res) => {
-    let userId = req.body.userId;
-    let postId = req.body.postId;
+router.delete('/decreaseUp',checkReferrer, async(req,res) => {
 
-    if(userId && postId) {
-        db.query('DELETE FROM Up WHERE user_id=? AND board_no=?',[userId,postId],(err,data) => {
-            if(err){
-                console.log('DELETE /post/decreaseUp ',err);
-                return res.status(500).json({message: err.code});
-            }else{
-                return res.status(200).json({result: true, message:'추천을 취소하였습니다'});
-            }
-        });
-    }else {
-        res.status(400).json({message: 'userId invalid or postId invalid'});
-    }
+    try {
+        let userId = req.body.userId;
+        let postId = req.body.postId;
     
+        if(userId && postId) {
+            let result = await sqlToBoardTable.decreaseUp(postId);
+            if(result) {
+                db.query('DELETE FROM Up WHERE user_id=? AND board_no=?',[userId,postId],(err,data) => {
+                    if(err){
+                        console.log('DELETE /post/decreaseUp ',err);
+                        return res.status(500).json({message: err.code});
+                    }else{
+                        return res.status(200).json({result: true, message:'추천을 취소하였습니다'});
+                    }
+                });
+            }
+        }else {
+            res.status(400).json({message: 'userId invalid or postId invalid'});
+        }
+
+    }catch(err) {
+        console.log('DELETE /post/decreaseUp ',err);
+        return res.status(500).json({ message: err.code });
+    }
 });
 
 //* 게시물 삭제
