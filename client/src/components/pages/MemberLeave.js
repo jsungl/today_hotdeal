@@ -38,7 +38,8 @@ export default function MemberLeave({isLogined, userId}) {
             if(prevResult.data.result) {
                 const deleteResult = await axios.delete(process.env.REACT_APP_DELETE_S3_POST_OBJECTS,{data:{userId}}); //S3 영구폴더에서 해당 유저 폴더 삭제
                 if(deleteResult.status === 200) {
-                    const res = await axios.post(`${process.env.REACT_APP_URL}/user/leaveMember`, data, {withCredentials: true});
+                    //const res = await axios.post(`${process.env.REACT_APP_URL}/user/leaveMember`, data, {withCredentials: true});
+                    const res = await axios.delete(`${process.env.REACT_APP_URL}/user/leaveMember`, { data: { userId }, withCredentials: true });
                     if(res.data.result){
                         alert('탈퇴처리 되었습니다');
                         dispatch(setLogout()); //로그아웃

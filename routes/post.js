@@ -255,7 +255,7 @@ router.put('/updateImageNames',async(req,res) => {
 });
 
 //* 게시물 추천
-router.post('/increaseUp',checkReferrer, async(req,res) => {
+router.patch('/increaseUp',checkReferrer, async(req,res) => {
     try {
         let userId = req.body.userId;
         let postId = req.body.postId;
@@ -285,8 +285,7 @@ router.post('/increaseUp',checkReferrer, async(req,res) => {
 });
 
 //* 게시물 추천 취소
-router.delete('/decreaseUp',checkReferrer, async(req,res) => {
-
+router.patch('/decreaseUp',checkReferrer, async(req,res) => {
     try {
         let userId = req.body.userId;
         let postId = req.body.postId;

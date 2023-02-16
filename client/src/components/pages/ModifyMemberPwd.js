@@ -36,7 +36,7 @@ export default function ModifyMemberPwd({isLogined, userId}) {
 
     const onhandlePost = async(data,event) => {
         try {
-            const res = await axios.post(`${process.env.REACT_APP_URL}/user/modifyMemberPwd`, data);
+            const res = await axios.patch(`${process.env.REACT_APP_URL}/user/modifyMemberPwd`, data);
             if(res.data.isModified){
                 alert('비밀번호 변경 완료');
                 navigate('/memberInfo');

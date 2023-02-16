@@ -42,7 +42,7 @@ export default function ResetAccount() {
 
     const onhandlePost = async(data,event) => {
         try {
-            const res = await axios.post(`${process.env.REACT_APP_URL}/user/resetPassword`,data);
+            const res = await axios.patch(`${process.env.REACT_APP_URL}/user/resetPassword`,data);
             if(res.data.result) {
                 alert('비밀번호가 변경되었습니다.');
             }

@@ -303,7 +303,7 @@ router.get('/getUserInfo',checkReferrer,async(req,res) => {
 
 
 //* 회원정보 변경
-router.post('/modifyMemberInfo', checkReferrer, async(req, res) => {
+router.put('/modifyMemberInfo', checkReferrer, async(req, res) => {
     try {
         let userId = req.body.userId;
         let userNickname = req.body.nickName;
@@ -359,7 +359,7 @@ router.post('/modifyMemberInfo', checkReferrer, async(req, res) => {
 });
 
 //* 비밀번호 변경
-router.post('/modifyMemberPwd', checkReferrer, async(req, res) => {
+router.patch('/modifyMemberPwd', checkReferrer, async(req, res) => {
     try {
         let userId = req.body.userId;
         let userPassword = req.body.password; //기존 비밀번호
@@ -417,7 +417,7 @@ router.post('/prevLeaveMember', checkReferrer, async(req,res) => {
 })
 
 //* 회원탈퇴
-router.post('/leaveMember', checkReferrer, async(req, res) => {
+router.delete('/leaveMember', checkReferrer, async(req, res) => {
     try {
         let userId = req.body.userId;
         db.query('DELETE FROM Member WHERE user_id=?',[userId],(err,data) => {
@@ -472,7 +472,7 @@ router.post('/findAccount', checkReferrer, async(req, res) => {
 });
 
 //* 비밀번호 재설정
-router.post('/resetPassword', checkReferrer, async(req, res) => {
+router.patch('/resetPassword', checkReferrer, async(req, res) => {
     try {
         let userId = req.body.userId;
         let token = req.body.token;

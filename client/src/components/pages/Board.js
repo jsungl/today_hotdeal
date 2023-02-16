@@ -49,7 +49,9 @@ export default function Board() {
     const [clickedUp, setClickedUp] = useState(false);
     const [loading, setLoading] = useState(true);
     const [open, setOpen] = useState(false);
+    const isLogined = useSelector(state => state.userReducer.isLogined);
     const userId = useSelector(state => state.userReducer.userId); //로그인한 사용자 ID
+    console.log(isLogined,userId);
     
     //useEffect
     useLayoutEffect(() => {
@@ -93,18 +95,22 @@ export default function Board() {
     //* 게시물 추천
     const handleUpBtn = async() => {
         try {
-            if(!clickedUp) {
-                const res = await axios.post(`${process.env.REACT_APP_URL}/post/increaseUp`,{ postId, userId });
-                if(res.data.result) {
-                    alert(res.data.message);
-                    setClickedUp(true);
+            if(isLogined) {
+                if(!clickedUp) {
+                    const res = await axios.patch(`${process.env.REACT_APP_URL}/post/increaseUp`,{ postId, userId });
+                    if(res.data.result) {
+                        alert(res.data.message);
+                        setClickedUp(true);
+                    }
+                }else {
+                    const res = await axios.patch(`${process.env.REACT_APP_URL}/post/decreaseUp`,{ data: { postId, userId } });
+                    if(res.data.result) {
+                        alert(res.data.message);
+                        setClickedUp(false);
+                    }
                 }
             }else {
-                const res = await axios.delete(`${process.env.REACT_APP_URL}/post/decreaseUp`,{ data: { postId, userId } });
-                if(res.data.result) {
-                    alert(res.data.message);
-                    setClickedUp(false);
-                }
+                alert('로그인을 먼저 해주세요');
             }
 
         }catch(err) {
