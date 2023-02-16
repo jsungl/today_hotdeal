@@ -1,4 +1,3 @@
-//import Table from 'react-bootstrap/Table';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
 import Table from '@mui/material/Table';
@@ -28,7 +27,7 @@ export default function BoardListTable({post}) {
             <TableContainer sx={{mb:2}}>
             {post.length !== 0 ? (
                 <Table sx={{ minWidth: 650}} aria-label="simple table">
-                    <TableHead sx={{background:'#F6F6F6',borderTop: "1px solid #ccc"}}>
+                    <TableHead sx={{background:"#F6F6F6",borderTop: "1px solid #ccc"}}>
                         <TableRow>
                             {theadTitle.map((item) => (
                                 <TableCell key={item.no} align="center" sx={{fontWeight:'bold'}}>{item.name}</TableCell>
@@ -41,7 +40,7 @@ export default function BoardListTable({post}) {
                                 hover
                                 key={data.no}
                                 sx={{
-                                    '&:not(:last-child) td':{borderBottom:"2px solid #F6F6F6"}
+                                    "&:not(:last-child) td":{borderBottom:"2px solid #F6F6F6"}
                                 }}
                             >
                                 <TableCell align="center">{data.no}</TableCell>
@@ -56,10 +55,10 @@ export default function BoardListTable({post}) {
                 </Table>
             ) : (
                 <Table sx={{ minWidth: 650}} aria-label="simple table">
-                    <TableHead sx={{background:'#F6F6F6',borderTop: "1px solid #ccc"}}>
+                    <TableHead sx={{background:"#F6F6F6",borderTop: "1px solid #ccc"}}>
                         <TableRow>
                             {theadTitle.map((item) => (
-                                <TableCell key={item.no} align="center" sx={{fontWeight:'bold'}}>{item.name}</TableCell>
+                                <TableCell key={item.no} align="center" sx={{fontWeight:"bold"}}>{item.name}</TableCell>
                             ))}
                         </TableRow>
                     </TableHead>

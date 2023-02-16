@@ -26,19 +26,18 @@ const InfoBox = styled.div`
 `;
 
 export default function FindAccount() {
-
     console.log('=========FindAccount Component Rendering=========');
     const navigate = useNavigate();
     const [emailError, setEmailError] = useState('');
     const theme = createTheme({
         palette: {
           primary: {
-            main: '#337ab7',
+            main: "#337ab7",
           },
         },
     });
     
-    const onhandlePost = async(data) => {
+    const onhandlePost = async(data,event) => {
         try {
             const res = await axios.post(`${process.env.REACT_APP_URL}/user/findAccount`,{ email: data });
             let msg = data + ' 메일로 인증 정보를 담은 메일이 발송되었습니다. 메일이 보이지 않으면 스팸보관함을 열어보시길 바랍니다.';
@@ -53,23 +52,24 @@ export default function FindAccount() {
                 setEmailError('다시 입력해주세요');
             }else {
                 alert('메일전송에 실패하였습니다');
+                event.target.reset();
             }
         }
     }
 
+    //* 아이디,비밀번호 찾기
     const onFindAccount = (e) => {
-        //아이디,비밀번호 찾기
         e.preventDefault();
         const data = new FormData(e.currentTarget);
         const userEmail = data.get('email');
 
-        // 이메일 유효성 체크
+        //이메일 유효성 체크
         const emailRegex = /([\w-.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/;
         if (!emailRegex.test(userEmail)) setEmailError('올바른 이메일 형식이 아닙니다.');
         else setEmailError('');
 
         if (emailRegex.test(userEmail)) {
-            onhandlePost(userEmail);
+            onhandlePost(userEmail,e);
             e.target.reset();
         }
     }
@@ -87,10 +87,10 @@ export default function FindAccount() {
                     mb: 8,
                     display: "flex",
                     flexDirection: "column",
-                    alignItems: 'center'
+                    alignItems: "center"
                 }}
             >
-                <Avatar sx={{ m: 1, bgcolor: '#337ab7' }}>
+                <Avatar sx={{ m: 1, bgcolor: "#337ab7" }}>
                     <LockOpenOutlinedIcon />
                 </Avatar>
                 <Typography component="h1" variant="h5">
@@ -103,12 +103,12 @@ export default function FindAccount() {
                         <TableHead>
                             <TableRow>
                                 <TableCell 
-                                    align='center' 
+                                    align="center"
                                     colSpan={2} 
                                     sx={{
-                                        borderTop:'2px solid #444',
-                                        borderBottom:'1px solid #888',
-                                        fontWeight:'700'
+                                        borderTop:"2px solid #444",
+                                        borderBottom:"1px solid #888",
+                                        fontWeight:"700"
                                     }}
                                 >
                                     아이디/비밀번호 찾기
@@ -117,16 +117,16 @@ export default function FindAccount() {
                         </TableHead>
                         <TableBody>
                             <TableRow>
-                                <TableCell sx={{background:'#f9f9f9'}}>
+                                <TableCell sx={{background:"#f9f9f9"}}>
                                     <Typography noWrap>이메일 주소</Typography>
                                 </TableCell>
                                 <TableCell>
-                                    <TextField name='email' size="small" error={emailError !== '' || false} required />
+                                    <TextField name="email" size="small" error={emailError !== "" || false} required />
                                     <FormHelperText error>{emailError}</FormHelperText>
                                 </TableCell>
                             </TableRow>
                             <TableRow>
-                                <TableCell colSpan={2} sx={{borderBottom:'1px solid #888'}}>
+                                <TableCell colSpan={2} sx={{borderBottom:"1px solid #888"}}>
                                     <InfoBox>
                                         <span>가입할 때 등록하신 메일 주소를 입력하시고 "아이디/비밀번호 찾기" 버튼을 클릭해주세요.</span>
                                     </InfoBox>

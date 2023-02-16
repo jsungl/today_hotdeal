@@ -5,20 +5,16 @@ import { useDispatch } from 'react-redux';
 import { setPostContent, setPostFlag } from '../modules/posts';
 
 export default function UpdateEditor({userId,content}) {
-
     const dispatch = useDispatch();
 
-    //const imgLink = "http://localhost:5000/uploads";
-
-    //console.log('[UploadEditor Component] userId ::',userId);
-
+    //* 업로드 어댑터
     const customUploadAdapter = (loader) => {
         return {
             upload(){
                 return new Promise ((resolve, reject) => {
                     
                     loader.file.then( async(file) => {
-                        //console.log('[UploadEditor Component] file ::',file);
+                        console.log('[UpdateEditor] file: ',file);
                         const originName = file.name;
                         const filename = originName.substring(0,originName.indexOf('.'))+Date.now();
                         const type = originName.substring(originName.indexOf('.')+1);
@@ -62,6 +58,7 @@ export default function UpdateEditor({userId,content}) {
         }
     }
 
+    //* 업로드 플러그인
     function uploadPlugin (editor){ 
         editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
             return customUploadAdapter(loader);
@@ -75,12 +72,13 @@ export default function UpdateEditor({userId,content}) {
             config={{
                 language: "ko",
                 toolbar: [
-                    'undo','redo','|',
-                    'heading','|',
-                    'bold','italic','underline','strikethrough','|',
-                    'fontFamily','fontSize','fontColor','|',
-                    'alignment','blockQuote','|',
-                    'imageUpload'],
+                    "undo","redo","|",
+                    "heading","|",
+                    "bold","italic","underline","strikethrough","|",
+                    "fontFamily","fontSize","fontColor","|",
+                    "alignment","blockQuote","|",
+                    "imageUpload"
+                ],
                 image: {
                     toolbar: [
                         "resizeImage",
@@ -90,16 +88,16 @@ export default function UpdateEditor({userId,content}) {
                     resizeUnit: "%",
                     resizeOptions: [ 
                         {
-                            name: 'resizeImage:original',
+                            name: "resizeImage:original",
                             value: null
                         },
                         {
-                            name: 'resizeImage:50',
-                            value: '50'
+                            name: "resizeImage:50",
+                            value: "50"
                         },
                         {
-                            name: 'resizeImage:75',
-                            value: '75'
+                            name: "resizeImage:75",
+                            value: "75"
                         }
                     ]
                 },
@@ -114,20 +112,10 @@ export default function UpdateEditor({userId,content}) {
                         editor.editing.view.document.getRoot()
                     );
                 });    
-                //console.log('Editor is ready to use!');
             }}
             onChange={(event, editor) => {
                 const data = editor.getData();
-                //dispatch({type:'CONTENT_CHANGE',content:data});
                 dispatch(setPostContent(data));
-            }}
-            onBlur={(event, editor) => {
-                //에디터가 아닌 다른곳을 클릭했을 때
-                //console.log('Blur');
-            }}
-            onFocus={(event, editor) => {
-                //에디터를 클릭했을 때
-                //console.log('Focus');
             }}
         />
     );

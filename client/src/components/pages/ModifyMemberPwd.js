@@ -22,14 +22,9 @@ const InfoBox = styled.div`
 
 export default function ModifyMemberPwd({isLogined, userId}) {
     const navigate = useNavigate();
-    // const location = useLocation();
     const [passwordChk, setPasswordChk] = useState('');
     const [newPasswordError, setNewPasswordError] = useState('');
     const [rePassworddError, setRePasswordError] = useState('');
-    // const isLogined = location.state.isLogined;
-    // const userId = location.state.userId;
-    console.log('[ModifyMemberPwd] isLogined: ',isLogined);
-    console.log('[ModifyMemberPwd] userId: ',userId);
 
     const theme = createTheme({
         palette: {
@@ -39,13 +34,12 @@ export default function ModifyMemberPwd({isLogined, userId}) {
         },
     });
 
-
-    const onhandlePost = async(data) => {
+    const onhandlePost = async(data,event) => {
         try {
             const res = await axios.post(`${process.env.REACT_APP_URL}/user/modifyMemberPwd`, data);
             if(res.data.isModified){
                 alert('비밀번호 변경 완료');
-                navigate('/memberInfo',{replace:true});
+                navigate('/memberInfo');
             }
 
         }catch(err) {
@@ -57,9 +51,9 @@ export default function ModifyMemberPwd({isLogined, userId}) {
                 setPasswordChk('비밀번호를 다시 입력해주세요.');
             }else {
                 alert('비밀번호 변경에 실패했습니다');
+                event.target.reset();
             }
         }
-
     }
 
     const modifyMemberPassword = (e) => {
@@ -93,19 +87,19 @@ export default function ModifyMemberPwd({isLogined, userId}) {
             newPassword === rePassword &&
             isLogined
         ) {
-            onhandlePost(result);
+            onhandlePost(result,e);
         }
     }
 
     return(
-        <Box sx={{width:'100%'}}>
+        <Box sx={{width:"100%"}}>
             <Typography variant="h6" sx={{ mb:2 }}>비밀번호 변경</Typography>
             <Box component="form" onSubmit={modifyMemberPassword}>
                 <TableContainer>
                     <Table>
                         <TableBody>
                             <TableRow>
-                                <TableCell sx={{ background:"#f9f9f9", borderTop:"2px solid #444", width:'10%', textAlign:'center' }}>
+                                <TableCell sx={{ background:"#f9f9f9", borderTop:"2px solid #444", width:"10%", textAlign:"center" }}>
                                     <Typography>아이디</Typography>
                                 </TableCell>
                                 <TableCell sx={{ borderTop:"2px solid #444" }}>{userId}</TableCell>
@@ -115,7 +109,7 @@ export default function ModifyMemberPwd({isLogined, userId}) {
                                     <Typography>현재 비밀번호</Typography>
                                 </TableCell>
                                 <TableCell>
-                                    <TextField name="password" type="password" size="small" error={passwordChk !== ''} required/>
+                                    <TextField name="password" type="password" size="small" error={passwordChk !== ""} required/>
                                     <FormHelperText error>{passwordChk}</FormHelperText>
                                     <InfoBox>
                                         <span>정보 변경을 위해 현재 비밀번호를 입력하시길 바랍니다.</span>
@@ -127,7 +121,7 @@ export default function ModifyMemberPwd({isLogined, userId}) {
                                     <Typography>신규 비밀번호</Typography>
                                 </TableCell>
                                 <TableCell>
-                                    <TextField name="newPassword" type="password" size="small" error={newPasswordError !== ''} required/>
+                                    <TextField name="newPassword" type="password" size="small" error={newPasswordError !== ""} required/>
                                     <FormHelperText error>{newPasswordError}</FormHelperText>
                                     <InfoBox>
                                         <span>비밀번호는 8~12자 사이의 영문+숫자로 이루어져야 하며 특수문자(!@#$%*)를 반드시 포함하여야 합니다.</span>
@@ -139,7 +133,7 @@ export default function ModifyMemberPwd({isLogined, userId}) {
                                     <Typography noWrap>비밀번호 확인</Typography>
                                 </TableCell>
                                 <TableCell>
-                                    <TextField name="rePassword" type="password" size="small" error={rePassworddError !== ''} required/>
+                                    <TextField name="rePassword" type="password" size="small" error={rePassworddError !== ""} required/>
                                     <FormHelperText error>{rePassworddError}</FormHelperText>
                                 </TableCell>
                             </TableRow>

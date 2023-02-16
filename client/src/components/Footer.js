@@ -6,13 +6,13 @@ import Box from '@mui/material/Box';
 function Copyright() {
     return (
       <Typography variant="body2" color="text.secondary" align="center">
-        {'Copyright © '}
+        {"Copyright © "}
         <Link color="#337ab7" href="https://mui.com/">
           Your Website
         </Link>
-        {' '}
+        {" "}
         {new Date().getFullYear()}
-        {' All rights reserved.'}
+        {" All rights reserved."}
       </Typography>
     );
 }

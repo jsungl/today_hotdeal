@@ -17,7 +17,6 @@ import MemeberLeave from './MemberLeave';
 
 
 export default function MemberInfo() {
-    
     const navigate = useNavigate();
     const { pathname } = useLocation();
     console.log('[MemberInfo] pathname: ',pathname);
@@ -25,18 +24,15 @@ export default function MemberInfo() {
     const act = params.get('act');
     const isLogined = useSelector(state => state.userReducer.isLogined);
     const userId = useSelector(state => state.userReducer.userId);
-    // console.log('[MemberInfo] isLogined :',isLogined);
-    // console.log('[MemberInfo] userId :',userId);
     const [memberId, setMemberId] = useState('');
     const [memberName, setMemberName] = useState('');
     const [memberMail, setMemberMail] = useState('');
     const [joinDate, setJoinDate] = useState('');
     const [post, setPost] = useState([]);
-    let userInfo = { id:userId, nickname:memberName, email:memberMail };
+    let userInfo = { id:userId, nickname:memberName, email:memberMail }; //회원정보 수정시 전달할 유저정보
 
     useLayoutEffect(() => {
         async function getUserInfo() {
-            console.log('[MemberInfo] 유저정보 가져오기');
             try {
                 const res = await axios.get(`${process.env.REACT_APP_URL}/user/getUserInfo`,{ params:{ userId } });
                 if(res.data.success) {
@@ -52,7 +48,6 @@ export default function MemberInfo() {
                 if(err.response.status === 301) navigate('/',{ replace: true });
             }
         }
-
         isLogined && getUserInfo();
 
     },[isLogined,userId,navigate,params]);
@@ -81,35 +76,35 @@ export default function MemberInfo() {
         });
     }
 
-    if(act === 'dispModifyMemberInfo') {
+    if(act === 'dispModifyMemberInfo') { //회원정보 수정
         return <ModifyMemberInfo isLogined={isLogined} userInfo={userInfo}/>
-    }else if(act === 'dispModifyMemberPwd') {
+    }else if(act === 'dispModifyMemberPwd') { //비밀번호 수정
         return <ModifyMemberPwd isLogined={isLogined} userId={userId}/>
-    }else if(act === 'dispMemberLeave'){
+    }else if(act === 'dispMemberLeave'){ //회원탈퇴
         return <MemeberLeave isLogined={isLogined} userId={userId}/>
     }
 
 
     return(
         <>
-            <MemberInfoHeader index={0} info={{isLogined, userId}} post={post}/>
+            <MemberInfoHeader index={0} info={{ isLogined, userId }} post={post}/>
             <Box sx={{ mt: 5, mb: 10 }}>
                 <Table aria-label="simple table" size="small">
                     <TableBody sx={{borderTop: "1px solid #ccc"}}>
                         <TableRow>
-                            <TableCell component="th" sx={{background:"#F6F6F6", width:100, whiteSpace: "nowrap"}}>아이디</TableCell>
+                            <TableCell component="th" sx={{background: "#F6F6F6", width: 100, whiteSpace: "nowrap"}}>아이디</TableCell>
                             <TableCell>{memberId}</TableCell>
                         </TableRow>
                         <TableRow>
-                            <TableCell component="th" sx={{background:"#F6F6F6", width:100}}>닉네임</TableCell>
+                            <TableCell component="th" sx={{background: "#F6F6F6", width: 100}}>닉네임</TableCell>
                             <TableCell>{memberName}</TableCell>
                         </TableRow>
                         <TableRow>
-                            <TableCell component="th" sx={{background:"#F6F6F6", width:100}}>이메일</TableCell>
+                            <TableCell component="th" sx={{background: "#F6F6F6", width: 100}}>이메일</TableCell>
                             <TableCell>{memberMail}</TableCell>
                         </TableRow>
                         <TableRow>
-                            <TableCell component="th" sx={{background:"#F6F6F6", width:100}}>가입일</TableCell>
+                            <TableCell component="th" sx={{background: "#F6F6F6", width: 100}}>가입일</TableCell>
                             <TableCell>{joinDate}</TableCell>
                         </TableRow>
                     </TableBody>

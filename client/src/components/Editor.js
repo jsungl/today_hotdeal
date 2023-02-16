@@ -4,30 +4,23 @@ import CustomEditor from 'ckeditor5-custom-build/build/ckeditor';
 import axios from 'axios';
 import { useDispatch } from 'react-redux';
 import { setPostContent, setPostFlag } from '../modules/posts';
-// import dotenv from "dotenv";
-// dotenv.config();
 
 
 export default function Editor({userId}) {
-
     const dispatch = useDispatch();
 
-    //const imgLink = "http://localhost:5000/uploads";
-
-    //console.log('[Editor Component] userId ::',userId);
-
+    //* 업로드 어댑터
     const customUploadAdapter = (loader) => {
         return {
             upload(){
                 return new Promise ((resolve, reject) => {
                     
                     loader.file.then( async(file) => {
-                        console.log('[Editor Component] file ::',file);
+                        console.log('[Editor] file: ',file);
                         const name = file.name;
                         const filename = name.substring(0,name.indexOf('.'))+Date.now();
                         const type = name.substring(name.indexOf('.')+1);
                         //const type = file.type.split("/")[1];
-                        //dispatch({type:"IMAGE_UPLOAD",flag:true});
                         dispatch(setPostFlag(true));                        
 
                         const bodyData = {
@@ -67,6 +60,7 @@ export default function Editor({userId}) {
         }
     }
 
+    //* 업로드 플러그인
     function uploadPlugin (editor){ 
         editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
             return customUploadAdapter(loader);
@@ -77,15 +71,16 @@ export default function Editor({userId}) {
         <CKEditor
             editor={CustomEditor}
             config={{
-                placeholder: '내용을 입력하세요.',
+                placeholder: "내용을 입력하세요.",
                 language: "ko",
                 toolbar: [
-                    'undo','redo','|',
-                    'heading','|',
-                    'bold','italic','underline','strikethrough','|',
-                    'fontFamily','fontSize','fontColor','|',
-                    'alignment','blockQuote','|',
-                    'imageUpload'],
+                    "undo","redo","|",
+                    "heading","|",
+                    "bold","italic","underline","strikethrough","|",
+                    "fontFamily","fontSize","fontColor","|",
+                    "alignment","blockQuote","|",
+                    "imageUpload"
+                ],
                 image: {
                     toolbar: [
                         "resizeImage",
@@ -95,16 +90,16 @@ export default function Editor({userId}) {
                     resizeUnit: "%",
                     resizeOptions: [ 
                         {
-                            name: 'resizeImage:original',
+                            name: "resizeImage:original",
                             value: null
                         },
                         {
-                            name: 'resizeImage:50',
-                            value: '50'
+                            name: "resizeImage:50",
+                            value: "50"
                         },
                         {
-                            name: 'resizeImage:75',
-                            value: '75'
+                            name: "resizeImage:75",
+                            value: "75"
                         }
                     ]
                 },
@@ -119,20 +114,10 @@ export default function Editor({userId}) {
                         editor.editing.view.document.getRoot()
                     );
                 });    
-                //console.log('Editor is ready to use!');
             }}
             onChange={(event, editor) => {
                 const data = editor.getData();
-                //dispatch({type:'CONTENT_CHANGE',content:data});
                 dispatch(setPostContent(data));
-            }}
-            onBlur={(event, editor) => {
-                //에디터가 아닌 다른곳을 클릭했을 때
-                //console.log('Blur');
-            }}
-            onFocus={(event, editor) => {
-                //에디터를 클릭했을 때
-                //console.log('Focus');
             }}
         />
     );

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
@@ -16,7 +16,6 @@ import Container from '@mui/material/Container';
 import Footer from '../Footer';
 
 export default function Login() {
-
     console.log('=========Login Component Rendering=========');
     const isLogined = useSelector(state => state.userReducer.isLogined);
     console.log('[Login] isLogined: ',isLogined);
@@ -27,8 +26,10 @@ export default function Login() {
     const [checked, setChecked] = useState(false);
     const { state } = useLocation();
 
-    useEffect(() => {
+    //useEffect
+    useLayoutEffect(() => {
         const expired = params.get('expired');
+        console.log('[Login] expired: ',typeof(expired));
         if(expired !== null && expired === '') alert('세션이 만료되었습니다. 다시 로그인해주세요.');
     },[params]);
 
@@ -44,15 +45,12 @@ export default function Login() {
             const res = await axios.post(`${process.env.REACT_APP_URL}/user/login`,loginData,{withCredentials: true});
             if(res.data.isLogined){
                 let user = res.data.userInfo;
-                //user.isLogined = true;
-                //user.rememberMe = checked;
-
                 //let accessToken = res.data.accessToken;
                 //axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
 
                 dispatch(setLogin(user)); //store에 유저정보 저장
                 if (state) {
-                    console.log('[Login] 이전에 보던 페이지 ',state);
+                    console.log('[Login] 이전에 보던 페이지: ',state);
                     navigate(state);
                 } else {
                     navigate('/');
@@ -66,7 +64,8 @@ export default function Login() {
         }
     }
 
-    const handleChange = (e) => { //로그인 유지 체크
+    //* 로그인 유지
+    const handleChange = (e) => { 
         setChecked(e.target.checked);
     }
 
@@ -123,10 +122,10 @@ export default function Login() {
                         </Button>
                         <Grid container>
                             <Grid item xs>
-                                <Link to='/findAccount'>아이디/비밀번호 찾기</Link>
+                                <Link to="/findAccount">아이디/비밀번호 찾기</Link>
                             </Grid>
                             <Grid item>
-                                <Link to='/signUp'>계정이 없으신가요?회원가입</Link>
+                                <Link to="/signUp">계정이 없으신가요?회원가입</Link>
                             </Grid>
                         </Grid>
                     </Box>

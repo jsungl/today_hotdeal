@@ -18,7 +18,6 @@ import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
 import styles from '../../style/Board.module.css';
 
-//axios.defaults.withCredentials = true;
 
 const TopArea = styled.div`
     padding: 10px;
@@ -52,7 +51,7 @@ export default function Board() {
     const [open, setOpen] = useState(false);
     const userId = useSelector(state => state.userReducer.userId); //로그인한 사용자 ID
     
-
+    //useEffect
     useLayoutEffect(() => {
         async function fetchData() {
             await axios
@@ -78,13 +77,13 @@ export default function Board() {
                     setDlvyChrg(res.data[0].delivery_charge);
                     res.data[0].up_chk === 1 && setClickedUp(true);
                     setLoading(false);
-                    console.log('[Board Component] 컴포넌트 마운트');
+                    console.log('[Board] 컴포넌트 마운트');
                 })
                 .catch((err) => {
                     console.error(err.response.data.message);
                     if(err.response.status === 404) { //게시물이 존재하지 않는 경우
                         alert(err.response.data.message);
-                        navigate('/');
+                        navigate('/',{replace:true});
                     }
                 });
         };
@@ -156,7 +155,7 @@ export default function Board() {
             :
             <>
                 <Backdrop 
-                    sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+                    sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
                     open={open}
                 >
                     <CircularProgress color="inherit" />
@@ -204,7 +203,7 @@ export default function Board() {
                             </TableRow>
                             <TableRow>
                                 <TableCell component="th" sx={{background:"#F6F6F6", width:100}}>배송비</TableCell>
-                                <TableCell>{dlvyChrg === 0 ? '무료' : dlvyChrg.toLocaleString() + '원'} </TableCell>
+                                <TableCell>{dlvyChrg === 0 ? "무료" : dlvyChrg.toLocaleString() + "원"} </TableCell>
                             </TableRow>
                         </TableBody>
                     </Table>
@@ -218,7 +217,7 @@ export default function Board() {
                             justifyContent="center"
                             alignItems="center"
                         >
-                            <IconButton size="large" color={clickedUp ? 'primary' : ''} onClick={handleUpBtn}>
+                            <IconButton size="large" color={clickedUp ? "primary" : ""} onClick={handleUpBtn}>
                                 <ThumbUpIcon />
                             </IconButton>
                         </Stack>

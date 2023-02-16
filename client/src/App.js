@@ -20,11 +20,9 @@ import { setLogin, setLogout } from './modules/users';
 import axios from 'axios';
 
 export default function App() {
-  const dispatch = useDispatch();
   console.log('=========App Component Rendering=========');
+  const dispatch = useDispatch();
   const isLogined = useSelector(state => state.userReducer.isLogined);
-  // console.log('[App] isLogined :',isLogined);
-
 
   // window.onbeforeunload = function() {
   //   console.log('[App] onbeforeunload ');
@@ -42,14 +40,11 @@ export default function App() {
         if(result.data.isLogined) { //로그인
           console.log('[App] 로그인한 유저 정보: ',result.data.userInfo);
           dispatch(setLogin(result.data.userInfo));
-          // let isLogined = sessionStorage.getItem('ILOGIN');
-          // if(!isLogined) sessionStorage.setItem('ILOGIN',true); 
         }
 
       }catch(err) {
         console.error(err.response.data.message);
         dispatch(setLogout());
-        //sessionStorage.removeItem('ILOGIN');
       }
     }
 

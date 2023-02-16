@@ -22,7 +22,6 @@ const checkReferrer = (req,res,next) => {
 
 }
 
-
 //* 회원가입
 router.post('/signUp', checkReferrer, async(req, res) => {
     try{
@@ -74,8 +73,7 @@ router.post('/login', checkReferrer, (req, res) => {
     try{
         let userId = req.body.userId;
         let userPwd = req.body.password;
-        let rememberMe = req.body.rememberMe; //쿠키로 저장
-        //console.log('요청확인 :',req);
+        let rememberMe = req.body.rememberMe;
 
         db.query('SELECT * FROM Member WHERE user_id=?',[userId],async(err,data) => {
             if(err){
@@ -147,7 +145,6 @@ router.post('/logout', checkReferrer, async(req,res) => {
         console.log('POST /user/logout :',err);
         return res.status(500).json({ message: err.code });
     }
-    
 });
 
 
@@ -236,13 +233,18 @@ router.get('/checkLogin', checkReferrer, async(req,res) => {
     try {
         let cUser = req.cookies['user'];
         let cRemember = req.cookies['rememberMe'];
+        let cAccessToken = req.cookies['access_token'];
+        let cRefreshToken = req.cookies['refresh_token'];
         // console.log('cUser :',cUser,typeof(cUser));
         // console.log('cRememberMe :',cRemember);
 
-        if(!cUser) { //쿠키없으면 로그아웃
-            //쿠키삭제
-            delAllCookies(req,res);
-            return res.status(409).json({ message: 'cookie is not found' });
+        if(!cUser) { 
+            if(cAccessToken && cRefreshToken) { //쿠키없으면 로그아웃
+                delAllCookies(req,res);
+                return res.status(409).json({ message: 'User cookie is not found' });
+            }else { //비로그인
+                return res.status(200).json({ isLogined: false });
+            }
 
         }else {
             let userId = JSON.parse(cUser).userId;
@@ -261,7 +263,6 @@ router.get('/checkLogin', checkReferrer, async(req,res) => {
                 const userInfo = {userId:userId, userNickname:result[0].user_nickname};
                 return res.status(200).json({ isLogined: true, userInfo });
             }
-
         }
 
     }catch(err) {

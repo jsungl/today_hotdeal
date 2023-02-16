@@ -15,22 +15,11 @@ const checkReferrer = (req,res,next) => {
         console.log('Referrer 검사 통과 실패!');
         return res.status(301).json({ redirectUrl: '/', message: 'referrer invalid' });
     }
-
 }
 
 //* 데이터 총 개수, 1번째 페이지(0~10) 데이터 조회 -> Home 컴포넌트
 router.get('/getHomeList', async(req, res) => {
     // 쿼리 2개 요청시 첫번째 쿼리 끝에 세미콜론을 붙여야한다
-    // const sql1 = 'SELECT count(*) count FROM Board;';
-    // const sql2 = 'SELECT * FROM Board ORDER BY board_no desc limit 10 offset 0';
-    // db.query(sql1+sql2,(err, data) => {
-    //     if(!err){
-    //         res.send(data);
-    //     } else {
-    //         res.send(err);
-    //     }
-    // });
-
     try {
         const count = await sqlToBoardTable.getTotalCount();
         const data = await sqlToBoardTable.getFirstPage();
@@ -40,9 +29,7 @@ router.get('/getHomeList', async(req, res) => {
         console.log('GET /post/getHomeList ',err);
         return res.status(500).json({ message: err.code });
     }
-
 });
-
 
 //* 게시물 목록 조회(정렬방법, 검색방법, 페이징) 
 router.get('/getBoardList',(req, res) => {
@@ -52,8 +39,6 @@ router.get('/getBoardList',(req, res) => {
     let target = req.query.target;
     let mainSQL = '';
     let subSQL = 'SELECT count(*) FROM Board';
-    // let testSubSQL = 'SELECT count(*) FROM Board';
-    // let testSQL = '';
     const keyword = '%' + req.query.keyword + '%';
 
 
@@ -61,46 +46,19 @@ router.get('/getBoardList',(req, res) => {
         if(category > 0) {
             subSQL += ` WHERE (title like ${db.escape(keyword)} OR text_content like ${db.escape(keyword)}) AND category=${category}`;
             mainSQL = 'SELECT *,(' + subSQL + `) count FROM Board WHERE (title like ${db.escape(keyword)} OR text_content like ${db.escape(keyword)}) AND category=${category}`;
-            // mainSQL = `SELECT * FROM Board WHERE (title like ${db.escape(keyword)} OR text_content like ${db.escape(keyword)}) AND category=${category}`;
         }else {
             subSQL += ` WHERE title like ${db.escape(keyword)} OR text_content like ${db.escape(keyword)}`;
             mainSQL = 'SELECT *,(' + subSQL + `) count FROM Board WHERE title like ${db.escape(keyword)} OR text_content like ${db.escape(keyword)}`;
-            // mainSQL = `SELECT * FROM Board WHERE title like ${db.escape(keyword)} OR text_content like ${db.escape(keyword)}`;
         }
     }else {
         if(category > 0) {
             subSQL += ` WHERE ${target} like ${db.escape(keyword)} AND category=${category}`;
             mainSQL = 'SELECT *,(' + subSQL + `) count FROM Board WHERE (${target} like ${db.escape(keyword)}) AND category=${category}`;
-            // mainSQL = `SELECT * FROM Board WHERE (${target} like ${db.escape(keyword)}) AND category=${category}`;
         }else {
             subSQL += ` WHERE ${target} like ${db.escape(keyword)}`;
             mainSQL = 'SELECT *,(' + subSQL + `) count FROM Board WHERE ${target} like ${db.escape(keyword)}`;
-            // mainSQL = `SELECT * FROM Board WHERE ${target} like ${db.escape(keyword)}`;
         }
     }
-
-    // switch (req.query.target) {
-    //   case 'title':
-    //       //제목
-    //       subSQL += ` WHERE title like ${db.escape(keyword)}`;    
-    //       mainSQL = 'SELECT *,(' + subSQL + `) count FROM Board WHERE title like ${db.escape(keyword)}`;
-    //       break;
-    //   case 'content':
-    //       //내용
-    //       subSQL += ` WHERE text_content like ${db.escape(keyword)}`;
-    //       mainSQL = 'SELECT *,(' + subSQL + `) count FROM Board WHERE text_content like ${db.escape(keyword)}`;
-    //       break;
-    //   case 'writer':
-    //       //글쓴이     
-    //       subSQL += ` WHERE user_id like ${db.escape(keyword)}`;
-    //       mainSQL = 'SELECT *,(' + subSQL + `) count FROM Board WHERE user_nickname like ${db.escape(keyword)}`;
-    //       break;
-    //   default:
-    //       //제목+내용
-    //       subSQL += ` WHERE title like ${db.escape(keyword)} OR text_content like ${db.escape(keyword)}`;
-    //       mainSQL = 'SELECT *,(' + subSQL + `) count FROM Board WHERE title like ${db.escape(keyword)} OR text_content like ${db.escape(keyword)}`;
-    //       break;
-    // }
   
     switch(req.query.align) {
       case 'hits':
@@ -141,8 +99,6 @@ router.get('/getBoardContent',async(req, res) => {
     try {
         let postId = req.query.postId;
         let userId = req.query.userId;
-        //let userInfo = req.cookies['user'];
-        //console.log('userInfo: ',userInfo);
         let myIp = getUserIP(req);
 
         if(req.cookies[myIp] === undefined){
@@ -238,14 +194,6 @@ router.post('/updateImagePath',async(req,res) => {
 
 //* 게시물 수정
 router.put('/updatePost', checkReferrer, (req,res) => {
-    // let title = req.body.postTitle;
-    // let name = req.body.productName;
-    // let price = req.body.productPrice;
-    // let dc = req.body.deliveryCharge;
-    // let postId = req.body.postId;
-    // let textContent = req.body.textContent;
-    // let htmlContent = req.body.htmlContent;
-
     const { postTitle,prdctName,prdctPrice,dlvyChrg,textContent,htmlContent,postId } = req.body;
 
     db.query('UPDATE Board SET title=?, html_content=?, text_content=?, product_name=?, product_price=?, delivery_charge=? WHERE board_no=?',

@@ -35,13 +35,12 @@ export default function ResetAccount() {
     const theme = createTheme({
         palette: {
           primary: {
-            main: '#337ab7',
+            main: "#337ab7",
           },
         },
     });
 
-    const onhandlePost = async(data) => {
-        console.log(data);
+    const onhandlePost = async(data,event) => {
         try {
             const res = await axios.post(`${process.env.REACT_APP_URL}/user/resetPassword`,data);
             if(res.data.result) {
@@ -54,6 +53,7 @@ export default function ResetAccount() {
                 alert(err.response.data.message);
             }else {
                 alert('비밀번호 재설정에 실패하였습니다');
+                event.target.reset();
             }
         }
 
@@ -87,10 +87,9 @@ export default function ResetAccount() {
             passwordRegex.test(password) && 
             password === rePassword
         ) {
-            onhandlePost(resetData);
+            onhandlePost(resetData,e);
             e.target.reset();
         }
-
     }
 
     return (
@@ -106,10 +105,10 @@ export default function ResetAccount() {
                     mb: 8,
                     display: "flex",
                     flexDirection: "column",
-                    alignItems: 'center'
+                    alignItems: "center"
                 }}
             >
-                <Avatar sx={{ m: 1, bgcolor: '#337ab7' }}>
+                <Avatar sx={{ m: 1, bgcolor: "#337ab7" }}>
                     <LockOutlinedIcon />
                 </Avatar>
                 <Typography component="h1" variant="h5">
@@ -122,12 +121,12 @@ export default function ResetAccount() {
                         <TableHead>
                             <TableRow>
                                 <TableCell 
-                                    align='center' 
+                                    align= "center"
                                     colSpan={2} 
                                     sx={{
-                                        borderTop:'2px solid #444',
-                                        borderBottom:'1px solid #888',
-                                        fontWeight:'700'
+                                        borderTop: "2px solid #444",
+                                        borderBottom: "1px solid #888",
+                                        fontWeight: "700"
                                     }}
                                 >
                                     비밀번호 재설정
@@ -140,7 +139,7 @@ export default function ResetAccount() {
                                     <Typography>비밀번호</Typography>
                                 </TableCell>
                                 <TableCell>
-                                    <TextField name="password" type="password" size="small" error={passwordState !== '' || false} required/>
+                                    <TextField name="password" type="password" size="small" error={passwordState !== "" || false} required/>
                                     <FormHelperText error>{passwordState}</FormHelperText>
                                     <InfoBox>
                                         <span>비밀번호는 8~12자 사이의 영문+숫자로 이루어져야 하며 특수문자(!@#$%*)를 반드시 포함하여야 합니다.</span>
@@ -152,7 +151,7 @@ export default function ResetAccount() {
                                     <Typography noWrap>비밀번호 확인</Typography>
                                 </TableCell>
                                 <TableCell sx={{ borderBottom:"1px solid #888" }}>
-                                    <TextField name="rePassword" type="password" size="small" error={passwordError !== '' || false} required/>
+                                    <TextField name="rePassword" type="password" size="small" error={passwordError !== "" || false} required/>
                                     <FormHelperText error>{passwordError}</FormHelperText>
                                 </TableCell>
                             </TableRow>

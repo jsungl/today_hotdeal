@@ -81,7 +81,6 @@ export default function BoardWrite() {
     useEffect(() => {
         if (success) {
             dispatch(setAsyncInit());
-            //navigate('/list',{replace:true});
             navigate(`/board/${postId}`,{replace:true});
         }
     }, [success, navigate, dispatch]);
@@ -101,7 +100,6 @@ export default function BoardWrite() {
     //* content를 html과 text로 나누기
     const devideContent = (content) => {
         const textContent = content.replace(/<[^>]*>?/g,'');
-        //console.log('html 분리 후 content ::',textContent);
         return textContent;
     }
 
@@ -109,9 +107,8 @@ export default function BoardWrite() {
     const deletePost = async(userId,postId) => {
         console.log('[BoardWrite] 게시물 이미지 업로드 오류');
         try {
-            //TODO: S3 영구폴더에 해당 게시물 번호로 이미지가 있다면 삭제
             let res = await axios.delete(`${process.env.REACT_APP_URL}/post/deletePost`,{ data:{ userId, postId } });
-            res.data.result && console.log('게시물 삭제 성공');
+            res.data.result && console.log('이미지 업로드시 오류가 발생하여 삭제하였습니다');
 
         }catch(err) {
             console.error(err.reponse.data.message);
@@ -147,7 +144,6 @@ export default function BoardWrite() {
             }
             alert('upload fail!');
             dispatch(setAsyncError()); //요청 실패
-
         }
     }
 
@@ -155,10 +151,8 @@ export default function BoardWrite() {
     const handleSubmit = async(e) => {
         try {
             e.preventDefault();
-            //console.log('[BoardWrite Component] content ::',content);
             if(content.length !== 0 && userId !== ""){
                 console.log('[BoardWrite] 게시글 등록!');
-                
                 const data = new FormData(e.currentTarget); 
                 const textContent = devideContent(content);
                 const imgSrcReg = /(<img[^>]*src\s*=\s*[^>]*>)/g; //img 태그 안에 src 찾는 정규식
@@ -168,7 +162,6 @@ export default function BoardWrite() {
 
                 if(imgSrcReg.test(htmlContent)){ //본문에 이미지가 있는지 찾는다 -> 복붙한 이미지인지 업로드한 이미지인지 확인
                     if(htmlContent.includes('/temp/')) { 
-                        //console.log('[BoardWrite Component] 바꾸기 전 falg ::',imageUpload.flag);
                         imageUpload.flag = true;
                         dispatch(setAsync()); //요청시작
                     }
@@ -200,7 +193,6 @@ export default function BoardWrite() {
                     });
                 }
 
-                console.log('[BoardWrite Component] htmlContent ::',htmlContent);
                 const uploadData = {
                     postCat:data.get('postCategory'),
                     postUrl: data.get('postUrl'),
@@ -247,17 +239,17 @@ export default function BoardWrite() {
     return(
         <>
             <Backdrop 
-                sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+                sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
                 open={loading}
             >
                 <CircularProgress color="inherit" />
             </Backdrop>
 
-            <Typography variant="h5" align='center' gutterBottom sx={{borderBottom:'1px solid #888'}}>
+            <Typography variant="h5" align="center" gutterBottom sx={{borderBottom:"1px solid #888"}}>
                 핫딜 등록
             </Typography>
             <Box component="form" onSubmit={handleSubmit}>
-                <Box sx={{marginTop:'30px',marginBottom:'50px'}}>
+                <Box sx={{marginTop:"30px",marginBottom:"50px"}}>
                     <table>
                         <tbody>
                             <tr>
@@ -275,23 +267,23 @@ export default function BoardWrite() {
                             </tr>
                             <tr>
                                 <td style={style}>URL 링크</td>
-                                <td><TextField name='postUrl' size="small" margin="dense" sx={{width:300}} type="url" required/></td>
+                                <td><TextField name="postUrl" size="small" margin="dense" sx={{width:300}} type="url" required/></td>
                             </tr>
                             <tr>
                                 <td>쇼핑몰</td>
-                                <td><TextField name='productMall' size="small" margin="dense" required/></td>
+                                <td><TextField name="productMall" size="small" margin="dense" required/></td>
                             </tr>
                             <tr>
                                 <td>상품명</td>
-                                <td><TextField name='productName' size="small" margin="dense" required/></td>
+                                <td><TextField name="productName" size="small" margin="dense" required/></td>
                             </tr>
                             <tr>
                                 <td>가격</td>
-                                <td><TextField name='productPrice' size="small" margin="dense" type="number" required/></td>
+                                <td><TextField name="productPrice" size="small" margin="dense" type="number" required/></td>
                             </tr>
                             <tr>
                                 <td>배송비</td>
-                                <td><TextField name='deliveryCharge' size="small" margin="dense" type="number" required/></td>
+                                <td><TextField name="deliveryCharge" size="small" margin="dense" type="number" required/></td>
                             </tr>
                         </tbody>
                     </table>

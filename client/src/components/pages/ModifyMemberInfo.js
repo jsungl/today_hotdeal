@@ -27,13 +27,8 @@ const InfoBox = styled.div`
 export default function ModifyMemberInfo({isLogined, userInfo}) {
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    //const location = useLocation();
     const [emailError, setEmailError] = useState('');
     const [nameError, setNameError] = useState('');
-    // const isLogined = location.state.isLogined;
-    // const userInfo = location.state.userInfo;
-    console.log('[ModifyMemberInfo] isLogined: ',isLogined);
-    console.log('[ModifyMemberInfo] userInfo: ',userInfo);
 
     const theme = createTheme({
         palette: {
@@ -43,14 +38,13 @@ export default function ModifyMemberInfo({isLogined, userInfo}) {
         },
     });
 
-    const onhandlePost = async(data) => {
-        console.log(data);
+    const onhandlePost = async(data,event) => {
         try {
             const res = await axios.post(`${process.env.REACT_APP_URL}/user/modifyMemberInfo`, data, {withCredentials: true});
             if(res.data.isModified){
                 alert('회원정보 변경 완료');
                 dispatch(setLogin(res.data.userInfo));
-                navigate('/memberInfo',{replace:true});
+                navigate('/memberInfo');
             }
 
         }catch(err) {
@@ -62,10 +56,10 @@ export default function ModifyMemberInfo({isLogined, userInfo}) {
                 navigate('/',{ replace: true });
             }else {
                 alert('회원정보 변경에 실패했습니다');
+                event.target.reset();
             }
         }
     }
-
 
     const modifyMemberInfo = (e) => {
         e.preventDefault();
@@ -79,7 +73,7 @@ export default function ModifyMemberInfo({isLogined, userInfo}) {
         const { nickName, email } = modifiedData;
         if(userInfo.nickname === nickName && userInfo.email === email) { //변경사항이 없는경우
             alert('회원정보 변경 완료');
-            navigate('/memberInfo',{replace:true});
+            navigate('/memberInfo',{ replace: true });
         }
             
         // 닉네임 유효성 검사
@@ -98,13 +92,13 @@ export default function ModifyMemberInfo({isLogined, userInfo}) {
             emailRegex.test(email) &&
             isLogined
         ) {
-            onhandlePost(modifiedData);
+            onhandlePost(modifiedData,e);
         }
         
     }
 
     return(
-        <Box sx={{width:'100%'}}>
+        <Box sx={{width:"100%"}}>
             <Typography variant="h6" sx={{ mb:2 }}>회원정보 변경</Typography>
             <Box component="form" onSubmit={modifyMemberInfo}>
                 <TableContainer>
@@ -126,7 +120,7 @@ export default function ModifyMemberInfo({isLogined, userInfo}) {
                         </TableHead>
                         <TableBody>
                             <TableRow>
-                                <TableCell sx={{ background:"#f9f9f9", width:'10%', textAlign:'center' }}>
+                                <TableCell sx={{ background:"#f9f9f9", width:"10%", textAlign:"center" }}>
                                     <Typography>아이디</Typography>
                                 </TableCell>
                                 <TableCell>{userInfo.id}</TableCell>
@@ -136,7 +130,7 @@ export default function ModifyMemberInfo({isLogined, userInfo}) {
                                     <Typography>닉네임</Typography>
                                 </TableCell>
                                 <TableCell>
-                                    <TextField name="nickName" size="small" error={nameError !== ''} defaultValue={userInfo.nickname} required/>
+                                    <TextField name="nickName" size="small" error={nameError !== ""} defaultValue={userInfo.nickname} required/>
                                     <FormHelperText error>{nameError}</FormHelperText>
                                     <InfoBox>
                                         <span>닉네임은 2~8자 이내 한글 또는 영어여야 합니다.</span>
@@ -148,7 +142,7 @@ export default function ModifyMemberInfo({isLogined, userInfo}) {
                                     <Typography noWrap>이메일 주소</Typography>
                                 </TableCell>
                                 <TableCell sx={{ borderBottom:"1px solid #888" }}>
-                                    <TextField name="email" size="small" error={emailError !== ''} defaultValue={userInfo.email} required/>
+                                    <TextField name="email" size="small" error={emailError !== ""} defaultValue={userInfo.email} required/>
                                     <FormHelperText error>{emailError}</FormHelperText>
                                     <InfoBox>
                                         <span>메일주소는 메일인증 후 비밀번호 변경이나 찾기 등에 사용됩니다.</span>

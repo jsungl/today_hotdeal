@@ -25,7 +25,6 @@ const InfoBox = styled.div`
 `;
 
 export default function SignUp() {
-
     console.log('=========SignUp Component Rendering=========');
     const [idError, setIdError] = useState('');
     const [emailError, setEmailError] = useState('');
@@ -44,7 +43,7 @@ export default function SignUp() {
     });
 
     //* 회원가입 요청
-    const onhandlePost = async(data) => {
+    const onhandlePost = async(data,event) => {
         const { userId, password, nickName, email } = data;
         const postData = {userId, password, nickName, email};
 
@@ -76,6 +75,7 @@ export default function SignUp() {
                     break;
                 default :
                     alert('회원가입 실패');
+                    event.target.reset();
             }
         });
     }
@@ -124,7 +124,7 @@ export default function SignUp() {
             nameRegex.test(nickName) && 
             emailRegex.test(email)
         ) {
-            onhandlePost(joinData);
+            onhandlePost(joinData,e);
         }
     }
 
@@ -175,7 +175,7 @@ export default function SignUp() {
                                     <Typography>아이디</Typography>
                                 </TableCell>
                                 <TableCell>
-                                    <TextField name="userId" size="small" error={idError !== '' || false} required/>
+                                    <TextField name="userId" size="small" error={idError !== "" || false} required/>
                                     <FormHelperText error>{idError}</FormHelperText>
                                     <InfoBox>
                                         <span>사용자 ID는 5~20자 사이의 영문+숫자로 이루어져야 하며 영문으로 시작되어야 합니다.</span>
@@ -187,7 +187,7 @@ export default function SignUp() {
                                     <Typography>비밀번호</Typography>
                                 </TableCell>
                                 <TableCell>
-                                    <TextField name="password" type="password" size="small" error={passwordState !== '' || false} required/>
+                                    <TextField name="password" type="password" size="small" error={passwordState !== "" || false} required/>
                                     <FormHelperText error>{passwordState}</FormHelperText>
                                     <InfoBox>
                                         <span>비밀번호는 8~12자 사이의 영문+숫자로 이루어져야 하며 특수문자(!@#$%*)를 반드시 포함하여야 합니다.</span>
@@ -199,7 +199,7 @@ export default function SignUp() {
                                     <Typography noWrap>비밀번호 확인</Typography>
                                 </TableCell>
                                 <TableCell>
-                                    <TextField name="rePassword" type="password" size="small" error={passwordError !== '' || false} required/>
+                                    <TextField name="rePassword" type="password" size="small" error={passwordError !== "" || false} required/>
                                     <FormHelperText error>{passwordError}</FormHelperText>
                                 </TableCell>
                             </TableRow>
@@ -208,7 +208,7 @@ export default function SignUp() {
                                     <Typography>닉네임</Typography>
                                 </TableCell>
                                 <TableCell>
-                                    <TextField name="nickName" size="small" error={nameError !== '' || false} required/>
+                                    <TextField name="nickName" size="small" error={nameError !== "" || false} required/>
                                     <FormHelperText error>{nameError}</FormHelperText>
                                     <InfoBox>
                                         <span>닉네임은 2~8자 이내여야 합니다.</span>
@@ -220,7 +220,7 @@ export default function SignUp() {
                                     <Typography noWrap>이메일 주소</Typography>
                                 </TableCell>
                                 <TableCell sx={{borderBottom:"1px solid #888"}}>
-                                    <TextField name="email" size="small" error={emailError !== '' || false} required/>
+                                    <TextField name="email" size="small" error={emailError !== "" || false} required/>
                                     <FormHelperText error>{emailError}</FormHelperText>
                                     <InfoBox>
                                         <span>메일주소는 메일인증 후 비밀번호 변경이나 찾기 등에 사용됩니다.</span>

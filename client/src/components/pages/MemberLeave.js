@@ -20,18 +20,10 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 export default function MemberLeave({isLogined, userId}) {
-    // const location = useLocation();
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const [passwordChk, setPasswordChk] = useState('');
     const [loading, setLoading] = useState(false);
-    
-    // const isLogined = location.state.isLogined;
-    // const userId = location.state.userId;
-    console.log('[MemberLeave] isLogined: ',isLogined);
-    console.log('[MemberLeave] userId: ',userId);
-
-
     const theme = createTheme({
         palette: {
           primary: {
@@ -40,7 +32,7 @@ export default function MemberLeave({isLogined, userId}) {
         },
     });
 
-    const onConfirm = async(data) => {
+    const onConfirm = async(data,event) => {
         try {
             const prevResult = await axios.post(`${process.env.REACT_APP_URL}/user/prevLeaveMember`, data, {withCredentials: true}); //탈퇴하기전 비밀번호 검증
             if(prevResult.data.result) {
@@ -53,9 +45,7 @@ export default function MemberLeave({isLogined, userId}) {
                         setLoading(false);
                         navigate('/',{replace:true});
                     }
-    
                 }
-
             }
             
         }catch(err) {
@@ -69,6 +59,7 @@ export default function MemberLeave({isLogined, userId}) {
                 setPasswordChk('비밀번호를 다시 입력해주세요');
             }else {
                 alert('회원탈퇴를 처리하지 못했습니다');
+                event.target.reset();
             }
         }
 
@@ -89,7 +80,7 @@ export default function MemberLeave({isLogined, userId}) {
 
         if(isLogined) {
             if (window.confirm('정말 탈퇴하시겠습니까?')) {
-                onConfirm(result);
+                onConfirm(result,e);
                 setLoading(true);
             }else {
                 return;
@@ -99,10 +90,10 @@ export default function MemberLeave({isLogined, userId}) {
     }
 
     return(
-        <Box sx={{ width:'100%' }}>
+        <Box sx={{ width:"100%" }}>
 
             <Backdrop 
-                sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+                sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
                 open={loading}
             >
                 <CircularProgress color="inherit" />
@@ -117,17 +108,17 @@ export default function MemberLeave({isLogined, userId}) {
                     <Table>
                         <TableBody>
                             <TableRow>
-                                <TableCell sx={{ background:"#f9f9f9", borderTop:"2px solid #444", width:'10%', textAlign:'center' }}>
+                                <TableCell sx={{ background:"#f9f9f9", borderTop:"2px solid #444", width:"10%", textAlign:"center" }}>
                                     <Typography>아이디</Typography>
                                 </TableCell>
                                 <TableCell sx={{ borderTop:"2px solid #444" }}>{userId}</TableCell>
                             </TableRow>
                             <TableRow>
-                                <TableCell sx={{ background:"#f9f9f9", textAlign:'center' }}>
+                                <TableCell sx={{ background:"#f9f9f9", textAlign:"center" }}>
                                     <Typography>비밀번호</Typography>
                                 </TableCell>
                                 <TableCell>
-                                    <TextField name="password" type="password" size="small" error={passwordChk !== ''} required/>
+                                    <TextField name="password" type="password" size="small" error={passwordChk !== ""} required/>
                                     <FormHelperText error>{passwordChk}</FormHelperText>
                                 </TableCell>
                             </TableRow>

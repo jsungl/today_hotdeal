@@ -34,34 +34,17 @@ import '../style/header.css'; //google web fonts
 export default function Header({target,setTarget,keyword,searchKeyword,searchText}) {
     const title = 'Hot Deal';
     const [anchorElUser, setAnchorElUser] = useState(null);
-    const [checked, setChecked] = useState(false);
+    const [visible, setVisible] = useState(false);
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const { pathname } = useLocation();
     const userId = useSelector(state => state.userReducer.userId);
     const userNickname = useSelector(state => state.userReducer.userNickname);
     const isLogined = useSelector(state => state.userReducer.isLogined);
-    //const cookies = new Cookies();
-
-    const handleResize = useCallback(() => {
-        if(window.innerWidth > 768 && checked) {
-            console.log('check change');
-            setChecked(false);
-        }
-    },[checked]);
-
-    useEffect(() => {
-        window.addEventListener('resize', handleResize);
-        return () => {
-            window.removeEventListener('resize', handleResize);
-        }
-
-    },[handleResize]);
-
     const customTheme = createTheme({
         palette: {
             primary: {
-                main: '#337ab7',
+                main: "#337ab7",
             },
         },
         breakpoints: {
@@ -75,6 +58,21 @@ export default function Header({target,setTarget,keyword,searchKeyword,searchTex
         },
     });
 
+    //* 화면 크기 조절
+    const handleResize = useCallback(() => {
+        if(window.innerWidth > 768 && visible) { //화면크기가 768px(breakpoint:md)보다 커지고, visible이 true이면
+            setVisible(false);
+        }
+    },[visible]);
+
+    useEffect(() => {
+        window.addEventListener('resize', handleResize);
+        return () => {
+            window.removeEventListener('resize', handleResize);
+        }
+
+    },[handleResize]);
+
     const handleCloseUserMenu = () => {
         setAnchorElUser(null);
     };
@@ -83,16 +81,12 @@ export default function Header({target,setTarget,keyword,searchKeyword,searchTex
         setAnchorElUser(event.currentTarget);
     };
 
-    // const onChangeInput = (event) => {
-        // setKeyword(event.target.value);
-    // };
-
     const onChangeTarget = (event) => {
         setTarget(event.target.value);
     };
 
     const onClickSearchIcon = (event) => {
-        setChecked((prev) => !prev);
+        setVisible((prev) => !prev);
     };
 
     const onClickLoginMenu = () => {
@@ -106,7 +100,6 @@ export default function Header({target,setTarget,keyword,searchKeyword,searchTex
     }
     
     const onClickMypage = () => {
-        console.log('마이페이지로 이동');
         setAnchorElUser(null);
         navigate('/memberInfo');
     }
@@ -134,23 +127,23 @@ export default function Header({target,setTarget,keyword,searchKeyword,searchTex
                 <Box sx={{ flexGrow: 1 }}>
                     <AppBar position="static" elevation={0}>
                         <Container maxWidth="xl">
-                            {checked ? (
+                            {visible ? (
                                 <Toolbar disableGutters={true}>
                                     <IconButton
                                         type="button"
-                                        sx={{ p: '10px' }}
+                                        sx={{ p: "10px" }}
                                         onClick={onClickSearchIcon}
                                     >
-                                        <ArrowBackIcon sx={{ fontSize: 30, color: '#fff' }} />
+                                        <ArrowBackIcon sx={{ fontSize: 30, color: "#fff" }} />
                                     </IconButton>
-                                    <Box sx={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+                                    <Box sx={{ flex: 1, display: "flex", alignItems: "center" }}>
                                         <Paper
                                             component="form"
                                             sx={{
-                                                p: '2px 4px',
-                                                display: { xs: 'flex', sm: 'flex', md: 'none' },
-                                                alignItems: 'center',
-                                                width: '100%',
+                                                p: "2px 4px",
+                                                display: { xs: "flex", sm: "flex", md: "none" },
+                                                alignItems: "center",
+                                                width: "100%",
                                             }}
                                             onSubmit={searchKeyword}
                                         >
@@ -161,10 +154,10 @@ export default function Header({target,setTarget,keyword,searchKeyword,searchTex
                                             >
                                                 <Select
                                                     sx={{
-                                                        '& .MuiSelect-select:focus': {
-                                                            background: 'none',
+                                                        "& .MuiSelect-select:focus": {
+                                                            background: "none",
                                                         },
-                                                        '& .MuiSelect-select': {
+                                                        "& .MuiSelect-select": {
                                                             paddingBottom: 0,
                                                         },
                                                     }}
@@ -172,10 +165,10 @@ export default function Header({target,setTarget,keyword,searchKeyword,searchTex
                                                     onChange={onChangeTarget}
                                                     disableUnderline
                                                 >
-                                                    <MenuItem value={'title_content'}>제목+내용</MenuItem>
-                                                    <MenuItem value={'title'}>제목</MenuItem>
-                                                    <MenuItem value={'content'}>내용</MenuItem>
-                                                    <MenuItem value={'writer'}>글쓴이</MenuItem>
+                                                    <MenuItem value={"title_content"}>제목+내용</MenuItem>
+                                                    <MenuItem value={"title"}>제목</MenuItem>
+                                                    <MenuItem value={"content"}>내용</MenuItem>
+                                                    <MenuItem value={"writer"}>글쓴이</MenuItem>
                                                 </Select>
                                             </FormControl>
                                             <TextField
@@ -189,7 +182,7 @@ export default function Header({target,setTarget,keyword,searchKeyword,searchTex
                                                 defaultValue={keyword}
                                                 inputRef={searchText}
                                             />
-                                            <IconButton type="submit" sx={{ p: '10px' }}>
+                                            <IconButton type="submit" sx={{ p: "10px" }}>
                                                 <SearchIcon />
                                             </IconButton>
                                         </Paper>
@@ -199,7 +192,7 @@ export default function Header({target,setTarget,keyword,searchKeyword,searchTex
                                 <Toolbar
                                     disableGutters={true}
                                     sx={{
-                                        justifyContent: 'space-between',
+                                        justifyContent: "space-between",
                                     }}
                                 >
                                     <Typography
@@ -211,17 +204,17 @@ export default function Header({target,setTarget,keyword,searchKeyword,searchTex
                                             letterSpacing: ".1rem",
                                         }}
                                     >
-                                        <Link href="/" underline="none" color="#fff" sx={{'&:hover': {textDecoration: "none"}}}>
+                                        <Link href="/" underline="none" color="#fff" sx={{"&:hover": {textDecoration: "none"}}}>
                                             {title}
                                         </Link>
                                     </Typography>
-                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                    <Box sx={{ display: "flex", alignItems: "center" }}>
                                         <Paper
                                             component="form"
                                             sx={{
-                                                p: '2px 4px',
-                                                display: { xs: 'none', sm: 'none', md: 'flex' },
-                                                alignItems: 'center',
+                                                p: "2px 4px",
+                                                display: { xs: "none", sm: "none", md: "flex" },
+                                                alignItems: "center",
                                                 width: 500,
                                             }}
                                             onSubmit={searchKeyword}
@@ -233,10 +226,10 @@ export default function Header({target,setTarget,keyword,searchKeyword,searchTex
                                             >
                                                 <Select
                                                     sx={{
-                                                        '& .MuiSelect-select:focus': {
-                                                            background: 'none',
+                                                        "& .MuiSelect-select:focus": {
+                                                            background: "none",
                                                         },
-                                                        '& .MuiSelect-select': {
+                                                        "& .MuiSelect-select": {
                                                             paddingBottom: 0,
                                                         },
                                                     }}
@@ -244,10 +237,10 @@ export default function Header({target,setTarget,keyword,searchKeyword,searchTex
                                                     onChange={onChangeTarget}
                                                     disableUnderline
                                                 >
-                                                    <MenuItem value={'title_content'}>제목+내용</MenuItem>
-                                                    <MenuItem value={'title'}>제목</MenuItem>
-                                                    <MenuItem value={'content'}>내용</MenuItem>
-                                                    <MenuItem value={'writer'}>글쓴이</MenuItem>
+                                                    <MenuItem value={"title_content"}>제목+내용</MenuItem>
+                                                    <MenuItem value={"title"}>제목</MenuItem>
+                                                    <MenuItem value={"content"}>내용</MenuItem>
+                                                    <MenuItem value={"writer"}>글쓴이</MenuItem>
                                                 </Select>
                                             </FormControl>
                                             <TextField
@@ -261,18 +254,18 @@ export default function Header({target,setTarget,keyword,searchKeyword,searchTex
                                                 defaultValue={keyword}
                                                 inputRef={searchText}
                                             />
-                                            <IconButton type="submit" sx={{ p: '10px' }}>
+                                            <IconButton type="submit" sx={{ p: "10px" }}>
                                                 <SearchIcon />
                                             </IconButton>
                                         </Paper>
                                     </Box>
-                                    <Box sx={{display:'flex'}}>
+                                    <Box sx={{display:"flex"}}>
                                         <IconButton
                                             size="medium"
                                             aria-haspopup="true"
                                             onClick={onClickSearchIcon}
                                             color="inherit"
-                                            sx={{display: { xs: 'flex', sm: 'flex', md: 'none' }}}
+                                            sx={{display: { xs: "flex", sm: "flex", md: "none" }}}
                                         >
                                             <SearchIcon sx={{ fontSize: 30 }}/>
                                         </IconButton>
@@ -289,32 +282,32 @@ export default function Header({target,setTarget,keyword,searchKeyword,searchTex
                                         
                                         {isLogined ?
                                             <Menu
-                                                sx={{ mt: '45px' }}
+                                                sx={{ mt: "45px" }}
                                                 id="menu-appbar"
                                                 anchorEl={anchorElUser}
                                                 anchorOrigin={{
-                                                    vertical: 'top',
-                                                    horizontal: 'center',
+                                                    vertical: "top",
+                                                    horizontal: "center",
                                                 }}
                                                 keepMounted
                                                 transformOrigin={{
-                                                    vertical: 'top',
-                                                    horizontal: 'center',
+                                                    vertical: "top",
+                                                    horizontal: "center",
                                                 }}
                                                 open={Boolean(anchorElUser)}
                                                 onClose={handleCloseUserMenu}
                                             > 
-                                                <MenuItem key={'userNickname'}>
+                                                <MenuItem key={"userNickname"}>
                                                     {userNickname} 님
                                                 </MenuItem>
                                                 <Divider />
-                                                <MenuItem key={'mypage'} onClick={onClickMypage}>
+                                                <MenuItem key={"mypage"} onClick={onClickMypage}>
                                                     <ListItemIcon>
                                                         <ManageAccountsIcon fontSize="small" />
                                                     </ListItemIcon>
                                                     마이페이지
                                                 </MenuItem>
-                                                <MenuItem key={'logout'} onClick={onClickLogout}>
+                                                <MenuItem key={"logout"} onClick={onClickLogout}>
                                                     <ListItemIcon>
                                                         <LogoutIcon fontSize="small" />
                                                     </ListItemIcon>
@@ -323,28 +316,28 @@ export default function Header({target,setTarget,keyword,searchKeyword,searchTex
                                             </Menu> 
                                         :
                                             <Menu
-                                                sx={{ mt: '45px' }}
+                                                sx={{ mt: "45px" }}
                                                 id="menu-appbar"
                                                 anchorEl={anchorElUser}
                                                 anchorOrigin={{
-                                                    vertical: 'top',
-                                                    horizontal: 'center',
+                                                    vertical: "top",
+                                                    horizontal: "center",
                                                 }}
                                                 keepMounted
                                                 transformOrigin={{
-                                                    vertical: 'top',
-                                                    horizontal: 'center',
+                                                    vertical: "top",
+                                                    horizontal: "center",
                                                 }}
                                                 open={Boolean(anchorElUser)}
                                                 onClose={handleCloseUserMenu}
                                             >
-                                                <MenuItem key={'login'} onClick={onClickLoginMenu}>
+                                                <MenuItem key={"login"} onClick={onClickLoginMenu}>
                                                     <ListItemIcon>
                                                         <LoginIcon fontSize="small" />
                                                     </ListItemIcon>
                                                     로그인
                                                 </MenuItem>
-                                                <MenuItem key={'join'} onClick={onClickJoinMenu}>
+                                                <MenuItem key={"join"} onClick={onClickJoinMenu}>
                                                     <ListItemIcon>
                                                         <PersonAdd fontSize="small" />
                                                     </ListItemIcon>
