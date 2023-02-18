@@ -17,7 +17,7 @@ const checkReferrer = (req,res,next) => {
         next();
     }else {
         console.log('Referrer 검사 통과 실패');
-        return res.status(301).json({ redirectUrl: '/', message: 'referrer invalid' });
+        return res.status(301).json({ redirectUrl: '/', message: req.headers.referer });
     }
 
 }
