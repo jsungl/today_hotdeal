@@ -83,9 +83,9 @@ router.post('/login', checkReferrer, (req, res) => {
                     const match = await bcrypt.compare(userPwd, data[0].user_pwd);
                     if(match){ //로그인 성공
                         let { accessToken,refreshToken } = await jwt.sign(data[0]);
-                        res.cookie('access_token',accessToken,{ httpOnly:true, sameSite:'Lax' }); //httpOnly :true 때문에 클라이언트(react)에서 접근불가
+                        res.cookie('access_token',accessToken,{ httpOnly:true, sameSite:'Lax', maxAge: 1000 * 60 * 60 }); //httpOnly :true 때문에 클라이언트(react)에서 접근불가
                         //maxAge: 1000 * 60 * 60
-                        res.cookie('refresh_token', refreshToken, { httpOnly:true, sameSite:'Lax' });
+                        res.cookie('refresh_token', refreshToken, { httpOnly:true, sameSite:'Lax', maxAge: 1000 * 60 * 60 * 24 * 7 });
                         //maxAge: 1000 * 60 * 60 * 24 * 7
 
                         let userInfo = {userId:data[0].user_id, userNickname:data[0].user_nickname, isLogined:true};
