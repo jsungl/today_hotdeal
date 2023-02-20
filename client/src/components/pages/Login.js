@@ -29,7 +29,7 @@ export default function Login() {
     //useEffect
     useLayoutEffect(() => {
         const expired = params.get('expired');
-        console.log('[Login] expired: ',typeof(expired));
+        //console.log('[Login] expired: ',typeof(expired));
         if(expired !== null && expired === '') alert('세션이 만료되었습니다. 다시 로그인해주세요.');
     },[params]);
 

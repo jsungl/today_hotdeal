@@ -9,8 +9,13 @@ if (process.env.NODE_ENV === 'production') {
 
 //* csrf 방어 - referrer 검증
 function chkReferer(referrer) {
-    //* csrf 방어 - referrer 검증
-    if(referrer === null || referrer !== 'http://15.164.144.146/') {
+    // if(referrer === null || referrer !== 'http://15.164.144.146/') {
+    //     return false;
+    // }else {
+    //     return true;
+    // }
+    console.log('util.js ',referrer);
+    if(referrer === null || referrer !== 'http://localhost:3000/') {
         return false;
     }else {
         return true;

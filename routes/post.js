@@ -8,6 +8,8 @@ const router = express.Router();
 
 //* Referrer 검사
 const checkReferrer = (req,res,next) => {
+    //const _csrf = chkReferer(req.headers.referer);
+    //console.log(req.headers.origin);
     const _csrf = chkReferer(req.headers.referer);
     if(_csrf) {
         next();
