@@ -29,16 +29,16 @@ app.use(cookieParser({ sameSite: "Lax" }));
 app.use('/post', postRouter);
 app.use('/user', userRouter);
 
-// app.use(express.static(path.join(__dirname, 'client/build')));
+app.use(express.static(path.join(__dirname, 'client/build')));
 
-// app.get('/', function(req,res) {
-//     res.sendFile(path.join(__dirname, 'client/build/index.html'));
-// });
+app.get('/', function(req,res) {
+    res.sendFile(path.join(__dirname, 'client/build/index.html'));
+});
 
 
-// app.get('*', function(req,res) {
-// 	res.sendFile(path.join(__dirname, 'client/build/index.html'))
-// });
+app.get('*', function(req,res) {
+	res.sendFile(path.join(__dirname, 'client/build/index.html'))
+});
 
 app.listen(port, function () {
     console.log(`listening on ${port}`);

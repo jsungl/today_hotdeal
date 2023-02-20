@@ -13,13 +13,14 @@ const router = express.Router();
 //* Referrer 검사
 const checkReferrer = (req,res,next) => {
     //const _csrf = chkReferer(req.headers.referer);
-    console.log('user.js ',req.headers.referer);
-    const _csrf = chkReferer(req.headers.referer);
+    console.log('user.js referer',req.headers.referer);
+    console.log('user.js origin',req.headers.origin);
+    const _csrf = chkReferer(req.headers.origin);
     if(_csrf) {
         next();
     }else {
         console.log('Referrer 검사 통과 실패');
-        return res.status(301).json({ redirectUrl: '/', message: 'referrer not vaild' });
+        return res.status(301).json({ redirectUrl: '/', message: 'referrer invaild' });
     }
 
 }

@@ -10,7 +10,7 @@ const router = express.Router();
 const checkReferrer = (req,res,next) => {
     //const _csrf = chkReferer(req.headers.referer);
     //console.log(req.headers.origin);
-    const _csrf = chkReferer(req.headers.referer);
+    const _csrf = chkReferer(req.headers.origin);
     if(_csrf) {
         next();
     }else {
