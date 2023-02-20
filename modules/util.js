@@ -15,7 +15,7 @@ function chkReferer(referrer) {
     //     return true;
     // }
     console.log('util.js ',referrer);
-    if(referrer === null || referrer !== `${process.env.REACT_APP_URL}`) {
+    if(referrer === null || referrer !== process.env.REQUEST_URL) {
         return false;
     }else {
         return true;
