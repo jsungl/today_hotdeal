@@ -6,14 +6,13 @@
 - 데이터베이스: Amazon RDS(MySQL)
 - 스토리지: Amazon S3
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app) and used [Nginx](https://www.nginx.com/) web server,
-[Express(Node.js/JavaScript)](https://expressjs.com/ko) web framework, Amazon S3 storage, Amazon RDS(MySQL) database system.
-
 ## 개요
 ![todayhotdeal](https://user-images.githubusercontent.com/79460509/220325750-31d71017-fe3d-4818-8917-819734cf16b0.jpg)
 핫딜이란 온라인, 모바일 쇼핑업계가 특정시간대에만 싸게 파는 마케팅을 말한다. 코로나19를 기점으로 국내에서 급성장한 온라인 쇼핑 환경에서 좀더 값싸고 품질좋은 다양한 상품을 쉽고 빠르게 확인할 수 있는 핫딜을 주제로 오늘의 핫딜이란 프로젝트를 개발하였다.
-  [와이어프레임](https://ovenapp.io/view/bxQaS7DNx3Q8kX64yHQfRNtmwBRswxDw)
-  [프로토타입](https://ovenapp.io/view/dgJWyjr8LKKQFPSDzEKXWHVknDbPod7B/YBoQW)
+<br>
+[와이어프레임](https://ovenapp.io/view/bxQaS7DNx3Q8kX64yHQfRNtmwBRswxDw)
+<br>
+[프로토타입](https://ovenapp.io/view/dgJWyjr8LKKQFPSDzEKXWHVknDbPod7B/YBoQW)
 
 ## 주요기능
 - 게시글 등록/수정/삭제
