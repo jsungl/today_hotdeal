@@ -2,7 +2,7 @@
 
 - 웹 서버: [Nginx](https://www.nginx.com/)
 - 웹 프레임워크: [Express(Node.js/JavaScript)](https://expressjs.com/ko)
-- 라이브러리: [Create React App](https://github.com/facebook/create-react-app)
+- 라이브러리: [React](https://github.com/facebook/create-react-app)
 - 데이터베이스: Amazon RDS(MySQL)
 - 스토리지: Amazon S3
 
