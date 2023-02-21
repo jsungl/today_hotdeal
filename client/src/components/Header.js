@@ -4,7 +4,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import { setLogout } from '../modules/users';
 //import { Cookies } from 'react-cookie';
 import axios from 'axios';
-import Typography from '@mui/material/Typography';
 import Link from '@mui/material/Link';
 import Toolbar from '@mui/material/Toolbar';
 import Box from '@mui/material/Box';
@@ -27,12 +26,12 @@ import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import LoginIcon from '@mui/icons-material/Login';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PersonAdd from '@mui/icons-material/PersonAdd';
+import HeaderLogo from '../image/todayhotdeal.png';
 import '../style/header.css'; //google web fonts
 
 
 
 export default function Header({target,setTarget,keyword,searchKeyword,searchText}) {
-    const title = 'Hot Deal';
     const [anchorElUser, setAnchorElUser] = useState(null);
     const [visible, setVisible] = useState(false);
     const navigate = useNavigate();
@@ -195,19 +194,9 @@ export default function Header({target,setTarget,keyword,searchKeyword,searchTex
                                         justifyContent: "space-between",
                                     }}
                                 >
-                                    <Typography
-                                        variant="h5"
-                                        noWrap
-                                        sx={{
-                                            fontFamily: "Anton",
-                                            fontWeight: 400,
-                                            letterSpacing: ".1rem",
-                                        }}
-                                    >
-                                        <Link href="/" underline="none" color="#fff" sx={{"&:hover": {textDecoration: "none"}}}>
-                                            {title}
-                                        </Link>
-                                    </Typography>
+                                    <Link href="/" underline="none" color="#fff" sx={{"&:hover": {textDecoration: "none"}}}>
+                                        <img src={HeaderLogo} alt="headerlogo" height="50" width="120"/>
+                                    </Link>
                                     <Box sx={{ display: "flex", alignItems: "center" }}>
                                         <Paper
                                             component="form"
