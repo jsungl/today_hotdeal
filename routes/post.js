@@ -145,7 +145,7 @@ router.get('/getBoardContent',async(req, res) => {
 });
 
 //* 게시물 등록
-router.post('/uploadPost', checkReferrer, async(req,res) => {
+router.post('/uploadPost', async(req,res) => {
     try {
         const { userId } = req.body;
         const data = await checkUser.getUserById(userId);
@@ -195,7 +195,7 @@ router.post('/updateImagePath',async(req,res) => {
 });
 
 //* 게시물 수정
-router.put('/updatePost', checkReferrer, (req,res) => {
+router.put('/updatePost', (req,res) => {
     const { postTitle,prdctName,prdctPrice,dlvyChrg,textContent,htmlContent,postId } = req.body;
 
     db.query('UPDATE Board SET title=?, html_content=?, text_content=?, product_name=?, product_price=?, delivery_charge=? WHERE board_no=?',
@@ -212,7 +212,7 @@ router.put('/updatePost', checkReferrer, (req,res) => {
 });
 
 //* 게시물 정보와 이미지 파일 조회(게시글 수정시)
-router.get('/getBoardInfo', checkReferrer, async(req, res) => {
+router.get('/getBoardInfo', async(req, res) => {
     try {
         let postId = req.query.postId;
         let data = await sqlToBoardTable.getAllByPostId(postId);
@@ -257,7 +257,7 @@ router.put('/updateImageNames',async(req,res) => {
 });
 
 //* 게시물 추천
-router.patch('/increaseUp',checkReferrer, async(req,res) => {
+router.patch('/increaseUp', async(req,res) => {
     try {
         let userId = req.body.userId;
         let postId = req.body.postId;
@@ -287,7 +287,7 @@ router.patch('/increaseUp',checkReferrer, async(req,res) => {
 });
 
 //* 게시물 추천 취소
-router.patch('/decreaseUp',checkReferrer, async(req,res) => {
+router.patch('/decreaseUp', async(req,res) => {
     try {
         let userId = req.body.userId;
         let postId = req.body.postId;
@@ -315,7 +315,7 @@ router.patch('/decreaseUp',checkReferrer, async(req,res) => {
 });
 
 //* 게시물 삭제
-router.delete('/deletePost',checkReferrer,(req,res) => {
+router.delete('/deletePost',(req,res) => {
     let userId = req.body.userId;
     let postId = req.body.postId;
 

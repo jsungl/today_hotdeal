@@ -12,21 +12,20 @@ const router = express.Router();
 
 //* Referrer 검사
 const checkReferrer = (req,res,next) => {
-    //const _csrf = chkReferer(req.headers.referer);
-    console.log('user.js referer',req.headers.referer);
-    console.log('user.js origin',req.headers.origin);
+    // console.log('user.js referer',req.headers.referer);
+    // console.log('user.js origin',req.headers.origin);
     const _csrf = chkReferer(req.headers.origin);
-    if(_csrf) {
-        next();
-    }else {
+    if(!_csrf) {
         console.log('Referrer 검사 통과 실패');
         return res.status(301).json({ redirectUrl: '/', message: 'referrer invaild' });
+    }else {
+        next();
     }
 
 }
 
 //* 회원가입
-router.post('/signUp', checkReferrer, async(req, res) => {
+router.post('/signUp', async(req, res) => {
     try{
         let userId = req.body.userId;
         let userPwd = req.body.password;
@@ -72,7 +71,7 @@ router.post('/signUp', checkReferrer, async(req, res) => {
 });
 
 //* 로그인
-router.post('/login', checkReferrer, (req, res) => {    
+router.post('/login', (req, res) => {    
     try{
         let userId = req.body.userId;
         let userPwd = req.body.password;
@@ -132,7 +131,7 @@ const delAllCookies = (req,res) => {
 
 
 //* 로그아웃
-router.post('/logout', checkReferrer, async(req,res) => {
+router.post('/logout', async(req,res) => {
     try {
         let userId = req.body.userId;
         if(userId){
@@ -154,9 +153,9 @@ router.post('/logout', checkReferrer, async(req,res) => {
 //* 토큰 유효성 검사
 const authenticateAccessToken = async(req,res,next) => {
     try{
-        const _csrf = chkReferer(req.headers.referer);
-        if(!_csrf) return res.status(301).json({ message: 'referrer invalid' });
-
+        //const _csrf = chkReferer(req.headers.referer);
+        // const _csrf = chkReferer(req.headers.origin);
+        // if(!_csrf) return res.status(301).json({ message: 'referrer invalid' });
         let cAccessToken = req.cookies['access_token'];
         let cRefreshToken = req.cookies['refresh_token'];
         //let token = req.headers.authorization.split(' ')[1];
@@ -232,7 +231,7 @@ router.get('/checkUser',authenticateAccessToken,(req,res) => {
 
 
 //* 현재 로그인 상태 확인
-router.get('/checkLogin', checkReferrer, async(req,res) => {
+router.get('/checkLogin', async(req,res) => {
     try {
         let cUser = req.cookies['user'];
         let cRemember = req.cookies['rememberMe'];
@@ -277,7 +276,7 @@ router.get('/checkLogin', checkReferrer, async(req,res) => {
 });
 
 //* 회원정보 조회
-router.get('/getUserInfo',checkReferrer,async(req,res) => {
+router.get('/getUserInfo',async(req,res) => {
     try {
         let userId = req.query.userId;
         if(!userId) return res.status(409).json({ message: 'userId invalid' });
@@ -306,7 +305,7 @@ router.get('/getUserInfo',checkReferrer,async(req,res) => {
 
 
 //* 회원정보 변경
-router.put('/modifyMemberInfo', checkReferrer, async(req, res) => {
+router.put('/modifyMemberInfo', async(req, res) => {
     try {
         let userId = req.body.userId;
         let userNickname = req.body.nickName;
@@ -362,7 +361,7 @@ router.put('/modifyMemberInfo', checkReferrer, async(req, res) => {
 });
 
 //* 비밀번호 변경
-router.patch('/modifyMemberPwd', checkReferrer, async(req, res) => {
+router.patch('/modifyMemberPwd', async(req, res) => {
     try {
         let userId = req.body.userId;
         let userPassword = req.body.password; //기존 비밀번호
@@ -394,7 +393,7 @@ router.patch('/modifyMemberPwd', checkReferrer, async(req, res) => {
 });
 
 //* 회원탈퇴 전 요청검사
-router.post('/prevLeaveMember', checkReferrer, async(req,res) => {
+router.post('/prevLeaveMember', async(req,res) => {
     try {
         let userId = req.body.userId;
         let userPassword = req.body.password;
@@ -420,7 +419,7 @@ router.post('/prevLeaveMember', checkReferrer, async(req,res) => {
 })
 
 //* 회원탈퇴
-router.delete('/leaveMember', checkReferrer, async(req, res) => {
+router.delete('/leaveMember', async(req, res) => {
     try {
         let userId = req.body.userId;
         db.query('DELETE FROM Member WHERE user_id=?',[userId],(err,data) => {
@@ -447,7 +446,7 @@ const createToken = () => {
 }
 
 //* 아이디/비밀번호 찾기
-router.post('/findAccount', checkReferrer, async(req, res) => {
+router.post('/findAccount', async(req, res) => {
     try {
         const userMail = req.body.email;
         const data = await checkUser.getUserByEmail(userMail);
@@ -475,7 +474,7 @@ router.post('/findAccount', checkReferrer, async(req, res) => {
 });
 
 //* 비밀번호 재설정
-router.patch('/resetPassword', checkReferrer, async(req, res) => {
+router.patch('/resetPassword', async(req, res) => {
     try {
         let userId = req.body.userId;
         let token = req.body.token;
